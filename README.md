@@ -43,6 +43,13 @@ The AI citation tracking market is dominated by VC-funded dashboards starting at
 | `ai_overview` | Google AI Overview presence + cited sources |
 | `cited_for` | Queries the domain has been cited for, from local cache |
 | `predict_citation` | Citation likelihood from public signals - no LLM fired |
+| `track_queries` | Save / load / list named query panels (editorial watchlists) |
+| `run_panel` | Run a panel through `am_i_cited` and snapshot to disk |
+| `citation_trend` | Time-series report of citation rate + per-query gained/lost deltas |
+| `compare_domains` | Side-by-side `predict_citation` across 2-10 URLs |
+| `wikipedia_mentions` | List Wikipedia articles referencing a domain (zero keys) |
+| `audit_sitemap` | Bulk `predict_citation` across every URL in a sitemap, worst-first |
+| `gsc_citation_gap` | Join Google Search Console performance with AI citation status |
 
 ## Quick start
 
@@ -154,11 +161,106 @@ Result:
     "https": true
   },
   "fixes": [
-    { "signal": "wikipedia_linked", "suggestion": "...", "estimated_lift": "high" },
-    { "signal": "llms_txt_present", "suggestion": "...", "estimated_lift": "medium" }
+    { "signal": "llms_txt_present", "suggestion": "Publish /llms.txt at the site root...", "estimated_lift": "medium" },
+    { "signal": "github_referenced", "suggestion": "Get the URL referenced from a GitHub repo README or issue...", "estimated_lift": "medium" }
   ]
 }
 ```
+
+The Wikipedia signal is measured (it correlates with citation) but no "go get a Wikipedia article" suggestion is emitted - the advice would be non-actionable.
+
+---
+
+## Workflow recipes
+
+Concrete patterns that compose the 12 tools into something useful. Costs assume ChatGPT or Perplexity at ~$0.01-0.03/query.
+
+### 1. Weekly citation tracker
+
+The single highest-ROI pattern. Pick 20-30 queries from your editorial backlog, snapshot weekly, watch the rate trend.
+
+```
+# One-time setup
+track_queries name="editorial-watchlist" domain="example.com" action="save"
+              queries=["best widget tutorial", "how to set up X", ...]
+
+# Weekly cron (5 min, ~$0.20-0.60 per run)
+run_panel name="editorial-watchlist"
+
+# Anytime
+citation_trend panel="editorial-watchlist"
+```
+
+`citation_trend` returns per-query deltas: which queries flipped from `cited: false` to `cited: true` since the first snapshot. That's your real editorial-impact metric.
+
+### 2. Pre-publish gate
+
+Before publishing a post, find out who owns the citation slot and whether the slot is worth competing for.
+
+```
+# 1. Is there an AI Overview to compete for?
+ai_overview query="<target query>"
+
+# 2. Who is cited today?
+check_citations query="<target query>"
+
+# 3. After publish + 14 days: did the post break in?
+am_i_cited domain="example.com" queries=["<target query>"]
+```
+
+If `check_citations` returns 5+ strong incumbents on a low-volume query, pick a different angle. If `ai_overview_present: false`, the query has no AI surface - reconsider.
+
+### 3. Bulk site audit
+
+Catch site-wide structural issues across every page in one pass. Zero API spend.
+
+```
+audit_sitemap sitemap_url="https://example.com/sitemap.xml" limit=200
+```
+
+Returns `worst_first` sorted by citation-likelihood score. Surfaces missing schema, conflicting canonicals, missing `/llms.txt`, broken HTTPS.
+
+### 4. Competitor signal gap
+
+You're not cited; they are. Why?
+
+```
+# 1. Find the top-cited URLs for your target query
+check_citations query="<query>"
+
+# 2. Compare your URL to theirs signal-by-signal
+compare_domains urls=[
+  "https://example.com/your-post",
+  "https://competitor-1.com/their-post",
+  "https://competitor-2.com/their-post"
+]
+```
+
+`diverging_signals` is the list of where you're losing. Usually obvious once you see it - they have FAQ schema, GitHub references, Wikipedia links - you don't.
+
+### 5. Google-rank vs AI-citation gap
+
+The closest editorial wins are queries where you already rank in Google's top 10 but are invisible to AI. Requires a GCP service account with `webmasters.readonly` scope.
+
+```
+gsc_citation_gap
+  domain="example.com"
+  queries=["...editorial watchlist..."]
+  start_date="2026-04-01"
+  end_date="2026-05-01"
+```
+
+`closest_wins` returns queries with `position <= 10` and `ai_cited: false`, sorted by impressions desc. Push citation signals on those specific URLs first.
+
+### 6. Wikipedia mention monitor
+
+Wikipedia is the top-correlation signal but the advice "get on Wikipedia" is useless. So instead: watch when it happens organically.
+
+```
+wikipedia_mentions domain="example.com" limit=50
+```
+
+Returns Wikipedia article URLs that already link to the domain. Re-run quarterly; the diff is your "we got a Wikipedia citation" alert.
 
 ## Schema.org
 
