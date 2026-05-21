@@ -209,13 +209,6 @@ export function suggestFixes(
     suggestion: string;
     estimated_lift: "low" | "medium" | "high";
   }> = [];
-  if (!s.wikipedia_linked)
-    fixes.push({
-      signal: "wikipedia_linked",
-      suggestion:
-        "Get the domain referenced from at least one Wikipedia article. Wikipedia citations are the single strongest signal for LLM training corpora.",
-      estimated_lift: "high",
-    });
   if (!s.schema_org_present)
     fixes.push({
       signal: "schema_org_present",
