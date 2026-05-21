@@ -1,0 +1,56 @@
+{
+  "name": "@automatelab/citation-intelligence",
+  "version": "0.1.0",
+  "mcpName": "io.github.AutomateLab-tech/citation-intelligence",
+  "description": "What LLMs cite, for agents. MCP server: check what Perplexity, Claude, ChatGPT, Gemini, Bing, and Google AI Overviews cite for any query. Self-hosted, BYO API key.",
+  "license": "MIT",
+  "author": "automatelab.tech",
+  "homepage": "https://github.com/AutomateLab-tech/citation-intelligence",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AutomateLab-tech/citation-intelligence.git"
+  },
+  "engines": { "node": ">=20" },
+  "type": "module",
+  "bin": {
+    "citation-intelligence": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "cheerio": "1.0.0",
+    "undici": "7.25.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.19",
+    "tsx": "4.22.0",
+    "typescript": "5.7.3",
+    "vitest": "3.2.4"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "mcp",
+    "citation",
+    "ai-search",
+    "geo",
+    "aeo",
+    "llm-visibility",
+    "perplexity",
+    "ai-overview",
+    "agent",
+    "self-hosted"
+  ]
+}
