@@ -13,7 +13,7 @@ export const amICitedInputSchema = {
     .max(20)
     .describe("Queries to test the domain against. 1-20 queries per call."),
   engine: z
-    .enum(["perplexity", "claude", "openai", "gemini", "bing", "auto"])
+    .enum(["perplexity", "claude", "openai", "gemini", "bing", "brave", "google_ai_mode", "auto"])
     .default("auto")
     .describe("AI engine to query."),
 };

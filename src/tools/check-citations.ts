@@ -4,6 +4,8 @@ import { bingSearch } from "../adapters/bing.js";
 import { claudeSearch } from "../adapters/anthropic.js";
 import { openaiSearch } from "../adapters/openai.js";
 import { geminiSearch } from "../adapters/gemini.js";
+import { braveSearch } from "../adapters/brave.js";
+import { googleAiModeSearch } from "../adapters/google-ai-mode.js";
 import { envKey } from "../lib/config.js";
 import { getCitations, putCitations } from "../lib/cache.js";
 import { ToolFetchError } from "../lib/fetch.js";
@@ -12,7 +14,16 @@ import type { AdapterResult, Engine } from "../types.js";
 export const checkCitationsInputSchema = {
   query: z.string().min(1).describe("The search query to test (what would a user ask an AI?)"),
   engine: z
-    .enum(["perplexity", "claude", "openai", "gemini", "bing", "auto"])
+    .enum([
+      "perplexity",
+      "claude",
+      "openai",
+      "gemini",
+      "bing",
+      "brave",
+      "google_ai_mode",
+      "auto",
+    ])
     .default("auto")
     .describe("AI engine to query. 'auto' picks the first available based on configured API keys."),
   max_results: z
@@ -31,7 +42,9 @@ function pickAutoEngine(): Engine | null {
   if (envKey("ANTHROPIC_API_KEY")) return "claude";
   if (envKey("OPENAI_API_KEY")) return "openai";
   if (envKey("GEMINI_API_KEY")) return "gemini";
+  if (envKey("BRAVE_API_KEY")) return "brave";
   if (envKey("BING_API_KEY")) return "bing";
+  if (envKey("SERPAPI_KEY")) return "google_ai_mode";
   return null;
 }
 
@@ -51,6 +64,10 @@ async function runEngine(
       return geminiSearch(query, maxResults);
     case "bing":
       return bingSearch(query, maxResults);
+    case "brave":
+      return braveSearch(query, maxResults);
+    case "google_ai_mode":
+      return googleAiModeSearch(query, maxResults);
     case "auto":
       throw new Error("auto engine should be resolved before runEngine");
   }

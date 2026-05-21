@@ -12,7 +12,7 @@ export const runPanelInputSchema = {
     .optional()
     .describe("Override the panel's default domain for this run."),
   engine: z
-    .enum(["perplexity", "claude", "openai", "gemini", "bing", "auto"])
+    .enum(["perplexity", "claude", "openai", "gemini", "bing", "brave", "google_ai_mode", "auto"])
     .default("auto")
     .describe("AI engine to query."),
 };

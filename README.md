@@ -38,7 +38,7 @@ The AI citation tracking market is dominated by VC-funded dashboards starting at
 
 | Tool | Purpose |
 |---|---|
-| `check_citations` | URLs cited by Perplexity / Claude / ChatGPT / Gemini / Bing for a query |
+| `check_citations` | URLs cited by Perplexity / Claude / ChatGPT / Gemini / Bing / Brave / Google AI Mode for a query |
 | `am_i_cited` | Presence + rank for a domain across a query cluster |
 | `ai_overview` | Google AI Overview presence + cited sources |
 | `cited_for` | Queries the domain has been cited for, from local cache |
@@ -50,6 +50,37 @@ The AI citation tracking market is dominated by VC-funded dashboards starting at
 | `wikipedia_mentions` | List Wikipedia articles referencing a domain (zero keys) |
 | `audit_sitemap` | Bulk `predict_citation` across every URL in a sitemap, worst-first |
 | `gsc_citation_gap` | Join Google Search Console performance with AI citation status |
+| `compete_for_query` | End-to-end competitive snapshot: your URL vs top cited competitors |
+| `citation_freshness_score` | Recency score (halflife=365d) for the pages an engine cites |
+| `cited_for_diff` | Diff of `cited_for` between two time windows for a domain |
+| `schema_audit` | Deep schema.org validation - required fields per `@type`, malformed JSON-LD |
+| `llms_txt_generator` | Generate an `llms.txt` (https://llmstxt.org) from a sitemap |
+| `answer_box_position` | Bin each citation's first mention in `raw_answer` into early/middle/late thirds |
+| `citation_provenance` | Fan a query across engines, report per-URL cross-engine consensus |
+| `citation_evidence` | Extract the cited snippet from `raw_answer` for each citation (why, not just that) |
+| `crawler_access_audit` | Verify GPTBot / ClaudeBot / PerplexityBot / CCBot / Google-Extended etc. can fetch a URL |
+| `sitemap_citation_map` | Cross-reference sitemap URLs with cached citations (inverse of audit_sitemap) |
+| `canonical_competitor_set` | Top cited domains per query, aggregated across engines |
+
+### Prompts
+
+Server-side prompt templates the client can offer end users (call via the MCP prompt list):
+
+- `audit_citation_readiness(url)` - chains `predict_citation` + `schema_audit`
+- `competitor_snapshot(query, your_url?)` - chains `canonical_competitor_set` + `compete_for_query`
+- `ai_crawler_checkup(url)` - runs `crawler_access_audit` and writes a remediation list
+- `citation_gap_analysis(domain, days?)` - drives `gsc_citation_gap` and suggests next moves
+- `sitemap_coverage_review(sitemap_url)` - runs `sitemap_citation_map` and recommends priorities
+
+### Resources
+
+Cache views the client can read or subscribe to (no tool call required):
+
+- `citation://cache/summary` - entry counts by type/engine, unique queries/URLs, oldest/newest
+- `citation://panels` - saved panels + per-panel snapshot counts
+- `citation://docs/llms-txt` - llms.txt primer (markdown)
+- `citation://docs/ai-crawlers` - AI crawlers cheatsheet (markdown)
+- `citation://domain/{domain}/cited-for` - dynamic template: citations for `{domain}`
 
 ## Quick start
 

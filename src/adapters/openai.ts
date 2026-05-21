@@ -1,6 +1,9 @@
 import { envKey } from "../lib/config.js";
 import { fetchJson, ToolFetchError } from "../lib/fetch.js";
+import { log } from "../lib/log.js";
 import type { AdapterResult, Citation } from "../types.js";
+
+const OPENAI_MODEL = "gpt-4o-mini";
 
 type OpenAiResponsesResult = {
   output?: Array<{
@@ -32,8 +35,9 @@ export async function openaiSearch(
     });
   }
 
+  log.debug("openai web_search", { model: OPENAI_MODEL });
   const body = JSON.stringify({
-    model: "gpt-4.1",
+    model: OPENAI_MODEL,
     tools: [{ type: "web_search_preview" }],
     input: query,
   });

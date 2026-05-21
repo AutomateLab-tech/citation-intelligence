@@ -23,12 +23,26 @@ import { compareDomains, compareDomainsInputSchema } from "./tools/compare-domai
 import { wikipediaMentions, wikipediaMentionsInputSchema } from "./tools/wikipedia-mentions.js";
 import { auditSitemap, auditSitemapInputSchema } from "./tools/audit-sitemap.js";
 import { gscCitationGap, gscCitationGapInputSchema } from "./tools/gsc-citation-gap.js";
+import { competeForQuery, competeForQueryInputSchema } from "./tools/compete-for-query.js";
+import { citationFreshnessScore, citationFreshnessScoreInputSchema } from "./tools/citation-freshness-score.js";
+import { citedForDiff, citedForDiffInputSchema } from "./tools/cited-for-diff.js";
+import { schemaAudit, schemaAuditInputSchema } from "./tools/schema-audit.js";
+import { llmsTxtGenerator, llmsTxtGeneratorInputSchema } from "./tools/llms-txt-generator.js";
+import { answerBoxPosition, answerBoxPositionInputSchema } from "./tools/answer-box-position.js";
+import { citationProvenance, citationProvenanceInputSchema } from "./tools/citation-provenance.js";
+import { citationEvidence, citationEvidenceInputSchema } from "./tools/citation-evidence.js";
+import { crawlerAccessAudit, crawlerAccessAuditInputSchema } from "./tools/crawler-access-audit.js";
+import { sitemapCitationMap, sitemapCitationMapInputSchema } from "./tools/sitemap-citation-map.js";
+import { canonicalCompetitorSet, canonicalCompetitorSetInputSchema } from "./tools/canonical-competitor-set.js";
+import { registerPrompts } from "./prompts.js";
+import { registerResources } from "./resources.js";
 import { ToolFetchError } from "./lib/fetch.js";
+import { log } from "./lib/log.js";
 import type { ToolError } from "./types.js";
 
 const server = new McpServer({
   name: "@automatelab/citation-intelligence",
-  version: "0.1.0",
+  version: "0.6.0",
 });
 
 type ToolResponse = {
@@ -51,9 +65,12 @@ function wrapHandler<T>(handler: () => Promise<T>): Promise<ToolResponse> {
       structuredContent: result as unknown as Record<string, unknown>,
     }))
     .catch((err: unknown): ToolResponse => {
-      if (err instanceof ToolFetchError) return toolError(err.toolError);
+      if (err instanceof ToolFetchError) {
+        log.warn("tool returned ToolFetchError", err.toolError);
+        return toolError(err.toolError);
+      }
       const message = err instanceof Error ? err.message : String(err);
-      console.error("[citation-intelligence]", message);
+      log.error("unhandled tool exception", { message });
       return toolError({ type: "fetch_error", url: "", message });
     });
 }
@@ -169,6 +186,36 @@ server.registerTool(
 );
 
 server.registerTool(
+  "compete_for_query",
+  {
+    description:
+      "End-to-end competitive snapshot for a single query. Calls check_citations to get the cited URLs, then runs compare_domains on your_url vs the top cited competitors. Returns your score, the average competitor score, and the gap.",
+    inputSchema: competeForQueryInputSchema,
+  },
+  (args) => wrapHandler(() => competeForQuery(args)),
+);
+
+server.registerTool(
+  "citation_freshness_score",
+  {
+    description:
+      "Score how recent the pages cited for a query are. Calls check_citations, then collects dateModified for each cited URL, returns a 0-100 recency_score (halflife=365d) plus per-URL freshness bucket (fresh/current/stale/ancient/unknown). Surfaces queries where AI cites old content - opportunity to ship fresher.",
+    inputSchema: citationFreshnessScoreInputSchema,
+  },
+  (args) => wrapHandler(() => citationFreshnessScore(args)),
+);
+
+server.registerTool(
+  "cited_for_diff",
+  {
+    description:
+      "Diff cited_for between two time windows for a domain. Returns queries gained (cited now, not before baseline_until) and queries lost (cited before, not since current_since). Cache-only, no API spend. Use to track citation drift over time after publishing or migrating content.",
+    inputSchema: citedForDiffInputSchema,
+  },
+  (args) => wrapHandler(() => citedForDiff(args)),
+);
+
+server.registerTool(
   "gsc_citation_gap",
   {
     description:
@@ -178,8 +225,134 @@ server.registerTool(
   (args) => wrapHandler(() => gscCitationGap(args)),
 );
 
+server.registerTool(
+  "schema_audit",
+  {
+    description:
+      "Deep schema.org validation for a URL. Parses every JSON-LD block and microdata node, checks required fields per @type (Article needs headline+author+datePublished, FAQPage needs mainEntity, HowTo needs step, etc.), and flags missing fields and malformed JSON-LD. Returns issues list and a valid/invalid verdict. Use to fix structured-data bugs that predict_citation flags but can't explain.",
+    inputSchema: schemaAuditInputSchema,
+  },
+  (args) => wrapHandler(() => schemaAudit(args)),
+);
+
+server.registerTool(
+  "llms_txt_generator",
+  {
+    description:
+      "Generate an llms.txt file (https://llmstxt.org spec) from a sitemap. Parses sitemap.xml + nested indexes, groups URLs by top-level path, and emits a Markdown document with H1+description+sectioned link lists. Set fetch_titles=true to pull <title> per URL (slower, richer output).",
+    inputSchema: llmsTxtGeneratorInputSchema,
+  },
+  (args) => wrapHandler(() => llmsTxtGenerator(args)),
+);
+
+server.registerTool(
+  "answer_box_position",
+  {
+    description:
+      "Locate where each cited URL appears in the AI's raw answer text. Calls check_citations, finds the first mention of each citation's URL (or hostname) in raw_answer, and bins by char position into early/middle/late thirds. Surfaces whether your URL is cited up-front or buried near the end. Returns 'unknown' for engines without raw_answer (Bing, Brave).",
+    inputSchema: answerBoxPositionInputSchema,
+  },
+  (args) => wrapHandler(() => answerBoxPosition(args)),
+);
+
+server.registerTool(
+  "citation_provenance",
+  {
+    description:
+      "Fan a query out across multiple AI engines and report per-URL cross-engine consensus. Returns each unique cited URL with the list of engines that cited it, plus a consensus_urls list (URLs cited by ALL engines). High engine_count = strong cross-engine citation signal; engine_count=1 = engine-specific.",
+    inputSchema: citationProvenanceInputSchema,
+  },
+  (args) => wrapHandler(() => citationProvenance(args)),
+);
+
+server.registerTool(
+  "citation_evidence",
+  {
+    description:
+      "Extract the cited snippet from the AI engine's raw answer for each citation. Calls check_citations, then for each returned URL finds the first mention in raw_answer and returns a context window plus the nearest quoted span or containing sentence. Use to see *why* an engine cited a URL, not just *that* it did. Returns 'not found' for engines without raw_answer (Bing, Brave).",
+    inputSchema: citationEvidenceInputSchema,
+  },
+  (args) => wrapHandler(() => citationEvidence(args)),
+);
+
+server.registerTool(
+  "crawler_access_audit",
+  {
+    description:
+      "Verify that major AI crawlers (GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot, CCBot, Google-Extended, Applebot-Extended, Bytespider, Meta-ExternalAgent, plus real-time fetch UAs) can fetch a URL. Parses robots.txt and does a live GET with each bot's User-Agent. Surfaces robots.txt blocks AND UA-based gating that breaks AI citation.",
+    inputSchema: crawlerAccessAuditInputSchema,
+  },
+  (args) => wrapHandler(() => crawlerAccessAudit(args)),
+);
+
+server.registerTool(
+  "sitemap_citation_map",
+  {
+    description:
+      "Cross-reference a sitemap with the citation cache. For each sitemap URL, reports whether it appears in cached citations (and how many queries/engines cited it). Inverse of audit_sitemap: not 'how citable is each URL', but 'has each URL actually been cited yet'. Cache must be primed via check_citations or run_panel first.",
+    inputSchema: sitemapCitationMapInputSchema,
+  },
+  (args) => wrapHandler(() => sitemapCitationMap(args)),
+);
+
+server.registerTool(
+  "canonical_competitor_set",
+  {
+    description:
+      "Fan a query across engines and aggregate citations by registered domain (not URL). Returns top competitor domains ranked by cross-engine consensus, with per-engine breakdown and top URLs per domain. Use to identify the canonical competitor set for a query - the domains every engine treats as authoritative.",
+    inputSchema: canonicalCompetitorSetInputSchema,
+  },
+  (args) => wrapHandler(() => canonicalCompetitorSet(args)),
+);
+
+registerPrompts(server);
+registerResources(server);
+
 const transport = new StdioServerTransport();
 await server.connect(transport);
-console.error(
-  "[citation-intelligence] server ready on stdio (tools: check_citations, am_i_cited, ai_overview, cited_for, predict_citation, track_queries, run_panel, citation_trend, compare_domains, wikipedia_mentions, audit_sitemap, gsc_citation_gap)",
+log.info(
+  "server ready on stdio",
+  {
+    version: "0.6.0",
+    log_level: log.level(),
+    tools: [
+      "check_citations",
+      "am_i_cited",
+      "ai_overview",
+      "cited_for",
+      "predict_citation",
+      "track_queries",
+      "run_panel",
+      "citation_trend",
+      "compare_domains",
+      "wikipedia_mentions",
+      "audit_sitemap",
+      "gsc_citation_gap",
+      "compete_for_query",
+      "citation_freshness_score",
+      "cited_for_diff",
+      "schema_audit",
+      "llms_txt_generator",
+      "answer_box_position",
+      "citation_provenance",
+      "citation_evidence",
+      "crawler_access_audit",
+      "sitemap_citation_map",
+      "canonical_competitor_set",
+    ],
+    prompts: [
+      "audit_citation_readiness",
+      "competitor_snapshot",
+      "ai_crawler_checkup",
+      "citation_gap_analysis",
+      "sitemap_coverage_review",
+    ],
+    resources: [
+      "citation://cache/summary",
+      "citation://panels",
+      "citation://docs/llms-txt",
+      "citation://docs/ai-crawlers",
+      "citation://domain/{domain}/cited-for",
+    ],
+  },
 );

@@ -4,6 +4,8 @@ export type Engine =
   | "openai"
   | "gemini"
   | "bing"
+  | "brave"
+  | "google_ai_mode"
   | "auto";
 
 export type Citation = {
@@ -28,7 +30,7 @@ export type AdapterResult = {
 };
 
 export type ToolError =
-  | { type: "missing_key"; engine: Engine; env_var: string; message: string }
+  | { type: "missing_key"; engine: Engine | "google_ai_mode"; env_var: string; message: string }
   | { type: "no_engine_available"; message: string }
   | { type: "fetch_error"; url: string; message: string; status?: number }
   | { type: "rate_limited"; engine: Engine; message: string }
