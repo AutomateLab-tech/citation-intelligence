@@ -97,9 +97,73 @@ describe("predict_citation", () => {
     expect(res.score).toBeLessThanOrEqual(100);
     expect(["A", "B", "C", "D", "F"]).toContain(res.grade);
     expect(typeof res.signals.https).toBe("boolean");
+    // v0.3.0 page-level signals
+    expect(typeof res.signals.word_count).toBe("number");
+    expect(typeof res.signals.h2_count).toBe("number");
+    expect(typeof res.signals.internal_link_count).toBe("number");
+    expect(typeof res.signals.external_link_count).toBe("number");
+    expect(typeof res.signals.has_open_graph).toBe("boolean");
+    expect(typeof res.signals.has_article_schema).toBe("boolean");
   }, 30_000);
 
   it("rejects an invalid URL", async () => {
     await expect(predictCitation({ url: "not-a-url" })).rejects.toBeDefined();
+  });
+});
+
+describe("scoreSignals discriminates between thin and rich pages", () => {
+  it("scores a deep article higher than a thin page with identical domain signals", async () => {
+    const { scoreSignals } = await import("../src/adapters/predictors.js");
+    const base = {
+      wikipedia_linked: false,
+      github_referenced: false,
+      reddit_referenced: false,
+      llms_txt_present: true,
+      https: true,
+      schema_org_present: true,
+      schema_types: ["WebPage"],
+      has_article_schema: false,
+      has_faq_schema: false,
+      has_howto_schema: false,
+      has_breadcrumb_schema: false,
+      canonical_clean: true,
+      h1_count: 1,
+      title_length: 50,
+      meta_description_length: 120,
+      has_open_graph: true,
+      has_twitter_card: true,
+      reading_time_minutes: 1,
+    } as const;
+    const thin = {
+      ...base,
+      word_count: 200,
+      h2_count: 0,
+      h2_question_count: 0,
+      table_of_contents_present: false,
+      image_count: 0,
+      internal_link_count: 0,
+      external_link_count: 0,
+      authority_link_count: 0,
+    };
+    const rich = {
+      ...base,
+      has_article_schema: true,
+      has_faq_schema: true,
+      has_breadcrumb_schema: true,
+      word_count: 2800,
+      reading_time_minutes: 13,
+      h2_count: 8,
+      h2_question_count: 4,
+      table_of_contents_present: true,
+      image_count: 6,
+      internal_link_count: 12,
+      external_link_count: 8,
+      authority_link_count: 3,
+      last_modified_days_ago: 30,
+      date_modified_iso: new Date().toISOString(),
+    };
+    const thinScore = scoreSignals(thin).score;
+    const richScore = scoreSignals(rich).score;
+    expect(richScore - thinScore).toBeGreaterThanOrEqual(40);
   });
 });

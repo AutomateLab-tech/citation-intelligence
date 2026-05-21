@@ -148,26 +148,36 @@ You: How likely is https://example.com/blog/post to be cited by AI?
 Result:
 {
   "url": "https://example.com/blog/post",
-  "score": 55,
+  "score": 62,
   "grade": "C",
   "signals": {
     "wikipedia_linked": false,
-    "schema_org_present": true,
-    "schema_types": ["Article"],
-    "llms_txt_present": false,
     "github_referenced": false,
     "reddit_referenced": true,
+    "llms_txt_present": true,
+    "https": true,
+    "has_article_schema": true,
+    "has_faq_schema": false,
+    "has_breadcrumb_schema": true,
     "canonical_clean": true,
-    "https": true
+    "word_count": 1850,
+    "reading_time_minutes": 8,
+    "h2_count": 7,
+    "h2_question_count": 1,
+    "authority_link_count": 2,
+    "external_link_count": 6,
+    "internal_link_count": 11,
+    "last_modified_days_ago": 42,
+    "has_open_graph": true
   },
   "fixes": [
-    { "signal": "llms_txt_present", "suggestion": "Publish /llms.txt at the site root...", "estimated_lift": "medium" },
-    { "signal": "github_referenced", "suggestion": "Get the URL referenced from a GitHub repo README or issue...", "estimated_lift": "medium" }
+    { "signal": "has_faq_schema", "suggestion": "Page already has question-style H2s. Wrap them in FAQPage JSON-LD - high-leverage win.", "estimated_lift": "high" },
+    { "signal": "h2_question_count", "suggestion": "Reframe at least 2 H2s as questions users actually ask...", "estimated_lift": "medium" }
   ]
 }
 ```
 
-The Wikipedia signal is measured (it correlates with citation) but no "go get a Wikipedia article" suggestion is emitted - the advice would be non-actionable.
+The Wikipedia signal is measured (it correlates with citation) but no "go get a Wikipedia article" suggestion is emitted - the advice would be non-actionable. Scoring is split across six buckets - domain authority, structured data, content depth, link graph, freshness, metadata - so a thin page and a deep page on the same domain get meaningfully different scores.
 
 ---
 

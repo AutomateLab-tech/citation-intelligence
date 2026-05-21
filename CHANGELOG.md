@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0 - 2026-05-21
+
+Page-level scoring rewrite. `predict_citation` now discriminates between thin pages and deep articles on the same domain.
+
+New signals on `predict_citation`:
+- Content depth: `word_count`, `reading_time_minutes`, `h1_count`, `h2_count`, `h2_question_count`, `table_of_contents_present`, `image_count`
+- Structured data (split out): `has_article_schema`, `has_faq_schema`, `has_howto_schema`, `has_breadcrumb_schema`
+- Link graph: `internal_link_count`, `external_link_count`, `authority_link_count` (counts links to wikipedia, github, .gov, .edu, arxiv, MDN, etc.)
+- Metadata hygiene: `title_length`, `meta_description_length`, `has_open_graph`, `has_twitter_card`
+- Freshness: `date_modified_iso`, `last_modified_days_ago` (parsed from JSON-LD `dateModified`, `article:modified_time`, or `<time datetime>`)
+
+`scoreSignals` rebalanced across six buckets: domain authority (25), structured data (20), content depth (20), link graph (12), freshness (8), metadata hygiene (10), transport (5).
+
+`suggestFixes` adds actionable advice for thin content, missing FAQ schema when question H2s exist, stale freshness, missing authority links, missing TOC on long pages.
+
 ## 0.2.0 - 2026-05-21
 
 7 new tools for editorial workflows + bulk audits.
