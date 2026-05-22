@@ -10,7 +10,7 @@ import { envKey } from "../lib/config.js";
 import { getCitations, putCitations } from "../lib/cache.js";
 import { ToolFetchError } from "../lib/fetch.js";
 import type { AdapterResult, Engine, Surface } from "../types.js";
-import { ENGINE_SURFACE } from "../types.js";
+import { ENGINE_SURFACE, ENGINE_INTERPRETATION_NOTE } from "../types.js";
 
 export const checkCitationsInputSchema = {
   query: z.string().min(1).describe("The search query to test (what would a user ask an AI?)"),
@@ -105,7 +105,9 @@ export async function checkCitations(input: z.infer<typeof inputSchema>) {
     engine = requested;
   }
 
-  const surface: Surface = ENGINE_SURFACE[engine as Exclude<Engine, "auto">];
+  const engineKey = engine as Exclude<Engine, "auto">;
+  const surface: Surface = ENGINE_SURFACE[engineKey];
+  const interpretation_note = ENGINE_INTERPRETATION_NOTE[engineKey];
 
   const cached = await getCitations(parsed.query, engine);
   if (cached) {
@@ -113,6 +115,7 @@ export async function checkCitations(input: z.infer<typeof inputSchema>) {
       query: parsed.query,
       engine,
       surface,
+      interpretation_note,
       fetched_at: cached.fetched_at,
       citations: cached.citations.slice(0, parsed.max_results),
       raw_answer: cached.raw_answer,
@@ -136,6 +139,7 @@ export async function checkCitations(input: z.infer<typeof inputSchema>) {
     query: parsed.query,
     engine,
     surface,
+    interpretation_note,
     fetched_at,
     citations: result.citations,
     raw_answer: result.raw_answer,

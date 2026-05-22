@@ -43,9 +43,16 @@ export async function runPanel(input: z.infer<typeof inputSchema>) {
   let engineUsed = parsed.engine;
   const fetchedAt = new Date().toISOString();
   for (const queries of chunks) {
-    const res = await amICited({ domain, queries, engine: parsed.engine });
-    engineUsed = res.engine;
-    perQuery.push(...res.results);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const res = await amICited({ domain, queries, engine: parsed.engine }) as any;
+    // Handle both single-engine and multi-engine return shapes.
+    if (res.mode === "single_engine") {
+      engineUsed = res.engine;
+      perQuery.push(...(res.results as typeof perQuery));
+    } else {
+      engineUsed = (res.engines?.[0]?.engine as typeof engineUsed) ?? parsed.engine;
+      for (const r of ((res.per_engine?.[0]?.results ?? []) as typeof perQuery)) perQuery.push(r);
+    }
   }
 
   const queriesCited = perQuery.filter((q) => q.cited).length;

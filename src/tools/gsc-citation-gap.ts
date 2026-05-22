@@ -103,12 +103,19 @@ export async function gscCitationGap(input: z.infer<typeof inputSchema>) {
       endDate: parsed.end_date,
       queries: parsed.queries,
     }),
-    amICited({ domain: parsed.domain, queries: parsed.queries, engine: parsed.engine }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    amICited({ domain: parsed.domain, queries: parsed.queries, engine: parsed.engine }) as Promise<any>,
   ]);
+
+  // Flatten citation results regardless of single/multi-engine mode.
+  const citationResults: Array<{ query: string; cited: boolean; rank?: number; matching_urls: string[] }> =
+    citation.mode === "single_engine"
+      ? citation.results
+      : citation.per_engine?.[0]?.results ?? [];
 
   const rows = parsed.queries.map((q) => {
     const gsc = gscMap.get(q.toLowerCase());
-    const cite = citation.results.find((r) => r.query === q);
+    const cite = citationResults.find((r) => r.query === q);
     return {
       query: q,
       gsc: {

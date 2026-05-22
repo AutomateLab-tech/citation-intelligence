@@ -36,10 +36,13 @@ The AI citation tracking market is dominated by VC-funded dashboards starting at
 
 ## Tools
 
+**Start with `citation_provenance` or `am_i_cited`.** Single-engine results (`check_citations` with a pinned engine) are directional; multi-engine consensus is the honest signal. A URL cited by 4 of 5 engines is a very different finding than one cited by 1.
+
 | Tool | Purpose |
 |---|---|
+| `citation_provenance` | **Recommended first tool.** Fan a query across engines; per-URL cross-engine consensus matrix. Returns `interpretation_note` per engine. |
+| `am_i_cited` | Domain citation check. With `engine=auto` (default): fans across all available LLM engines, returns per-engine breakdown + cross-engine consensus. Pin `engine=` to reduce cost. |
 | `check_citations` | URLs cited by Perplexity / Claude / ChatGPT / Gemini / Google AI Mode for a query; or web rank via bing_serp / brave_serp |
-| `am_i_cited` | Presence + rank for a domain across a query cluster |
 | `ai_overview` | Google AI Overview presence + cited sources |
 | `cited_for` | Queries the domain has been cited for, from local cache |
 | `predict_citation` | Citation likelihood from public signals - no LLM fired |
@@ -108,6 +111,8 @@ Every response includes a `surface` field that tells you exactly how the data wa
 **`bing_serp` / `brave_serp` (web_rank)** — Traditional SERP rank. Does NOT measure LLM citations. Use `check_citations` with these engines to compare organic web rank against LLM citation rank. `am_i_cited` refuses these engines — it only measures LLM behavior.
 
 The proxy nature of `api_proxy` engines is a feature, not a bug: it lets you run citation checks without consuming expensive consumer-product quota. Just don't report API-proxy numbers as "ChatGPT cites you" without the caveat.
+
+Every tool response includes an `interpretation_note` field that summarizes the fidelity in one sentence. Full per-engine fidelity ratings: [docs/surface-fidelity.md](docs/surface-fidelity.md).
 
 ---
 

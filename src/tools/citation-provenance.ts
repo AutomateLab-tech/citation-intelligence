@@ -3,7 +3,7 @@ import { envKey } from "../lib/config.js";
 import { checkCitations } from "./check-citations.js";
 import { log } from "../lib/log.js";
 import type { Engine } from "../types.js";
-import { ENGINE_SURFACE } from "../types.js";
+import { ENGINE_SURFACE, ENGINE_INTERPRETATION_NOTE } from "../types.js";
 
 export const citationProvenanceInputSchema = {
   query: z.string().min(1).describe("Search query to fan out across multiple engines."),
@@ -103,6 +103,7 @@ export async function citationProvenance(input: z.infer<typeof inputSchema>) {
     engines: runs.map((r) => ({
       engine: r.engine,
       surface: ENGINE_SURFACE[r.engine as Exclude<Engine, "auto">],
+      interpretation_note: ENGINE_INTERPRETATION_NOTE[r.engine as Exclude<Engine, "auto">],
       ok: r.ok,
       citations: r.urls.length,
       error: r.error,
