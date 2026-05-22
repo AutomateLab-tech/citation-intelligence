@@ -22,6 +22,7 @@ export const checkCitationsInputSchema = {
       "gemini",
       "bing_serp",
       "brave_serp",
+      "brave",
       "google_ai_mode",
       "auto",
     ])
@@ -78,6 +79,7 @@ async function runEngine(
     case "bing_serp":
       return bingSearch(query, maxResults);
     case "brave_serp":
+    case "brave":
       return braveSearch(query, maxResults);
     case "google_ai_mode":
       return googleAiModeSearch(query, maxResults);

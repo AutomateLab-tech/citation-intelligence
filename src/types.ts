@@ -5,6 +5,7 @@ export type Engine =
   | "gemini"
   | "bing_serp"
   | "brave_serp"
+  | "brave"
   | "google_ai_mode"
   | "auto";
 
@@ -23,6 +24,7 @@ export const ENGINE_SURFACE: Record<Exclude<Engine, "auto">, Surface> = {
   google_ai_mode: "consumer_scrape",
   bing_serp: "web_rank",
   brave_serp: "web_rank",
+  brave: "web_rank",
 };
 
 /**
@@ -43,6 +45,8 @@ export const ENGINE_INTERPRETATION_NOTE: Record<Exclude<Engine, "auto">, string>
   bing_serp:
     "Bing Web Search API — traditional SERP rank, NOT LLM citation behavior.",
   brave_serp:
+    "Brave Search API — traditional SERP rank, NOT LLM citation behavior.",
+  brave:
     "Brave Search API — traditional SERP rank, NOT LLM citation behavior.",
 };
 
