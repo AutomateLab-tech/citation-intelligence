@@ -10,9 +10,12 @@ type SonarResponse = {
   search_results?: Array<{ title?: string; url?: string }>;
 };
 
+export const PERPLEXITY_MODEL_DEFAULT = "sonar-pro";
+
 export async function perplexitySearch(
   query: string,
   maxResults: number,
+  model: string = PERPLEXITY_MODEL_DEFAULT,
 ): Promise<AdapterResult> {
   const key = envKey("PERPLEXITY_API_KEY");
   if (!key) {
@@ -25,8 +28,10 @@ export async function perplexitySearch(
     });
   }
 
+  // System prompt approximates Perplexity.ai consumer behavior: search-first with citations.
   const body = JSON.stringify({
-    model: "sonar",
+    model,
+    system: "You are a search assistant. Answer with inline citations. List each source URL you used.",
     messages: [{ role: "user", content: query }],
     return_citations: true,
   });

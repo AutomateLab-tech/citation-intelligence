@@ -10,7 +10,7 @@ export const competeForQueryInputSchema = {
     .url()
     .describe("Your URL to benchmark against the cited competitors."),
   engine: z
-    .enum(["perplexity", "claude", "openai", "gemini", "bing", "brave", "auto"])
+    .enum(["perplexity", "claude", "openai", "gemini", "bing_serp", "brave_serp", "google_ai_mode", "auto"])
     .default("auto")
     .describe("AI engine to query for the citation set. 'auto' picks the first available key."),
   max_competitors: z

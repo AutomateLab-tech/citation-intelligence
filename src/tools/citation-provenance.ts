@@ -3,15 +3,20 @@ import { envKey } from "../lib/config.js";
 import { checkCitations } from "./check-citations.js";
 import { log } from "../lib/log.js";
 import type { Engine } from "../types.js";
+import { ENGINE_SURFACE } from "../types.js";
 
 export const citationProvenanceInputSchema = {
   query: z.string().min(1).describe("Search query to fan out across multiple engines."),
   engines: z
-    .array(z.enum(["perplexity", "claude", "openai", "gemini", "bing", "brave"]))
+    .array(z.enum(["perplexity", "claude", "openai", "gemini", "google_ai_mode", "bing_serp", "brave_serp"]))
     .min(1)
-    .max(6)
+    .max(7)
     .optional()
-    .describe("Engines to query. If omitted, uses all engines with a configured API key."),
+    .describe(
+      "Engines to query. If omitted, uses all LLM engines with a configured API key " +
+      "(perplexity, claude, openai, gemini, google_ai_mode). " +
+      "Include bing_serp/brave_serp only when you explicitly want web_rank comparison."
+    ),
   max_results: z
     .number()
     .int()
@@ -23,14 +28,14 @@ export const citationProvenanceInputSchema = {
 
 const inputSchema = z.object(citationProvenanceInputSchema);
 
+/** Returns only LLM engines by default (no web_rank) — consistent with citation provenance intent */
 function availableEngines(): Engine[] {
   const list: Engine[] = [];
+  if (envKey("SERPAPI_KEY")) list.push("google_ai_mode");
   if (envKey("PERPLEXITY_API_KEY")) list.push("perplexity");
   if (envKey("ANTHROPIC_API_KEY")) list.push("claude");
   if (envKey("OPENAI_API_KEY")) list.push("openai");
   if (envKey("GEMINI_API_KEY")) list.push("gemini");
-  if (envKey("BRAVE_API_KEY")) list.push("brave");
-  if (envKey("BING_API_KEY")) list.push("bing");
   return list;
 }
 
@@ -95,7 +100,13 @@ export async function citationProvenance(input: z.infer<typeof inputSchema>) {
   return {
     query: parsed.query,
     fetched_at: new Date().toISOString(),
-    engines: runs.map((r) => ({ engine: r.engine, ok: r.ok, citations: r.urls.length, error: r.error })),
+    engines: runs.map((r) => ({
+      engine: r.engine,
+      surface: ENGINE_SURFACE[r.engine as Exclude<Engine, "auto">],
+      ok: r.ok,
+      citations: r.urls.length,
+      error: r.error,
+    })),
     engines_queried: runs.length,
     engines_succeeded: okRuns.length,
     per_url: perUrl,

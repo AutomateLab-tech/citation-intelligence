@@ -38,7 +38,7 @@ The AI citation tracking market is dominated by VC-funded dashboards starting at
 
 | Tool | Purpose |
 |---|---|
-| `check_citations` | URLs cited by Perplexity / Claude / ChatGPT / Gemini / Bing / Brave / Google AI Mode for a query |
+| `check_citations` | URLs cited by Perplexity / Claude / ChatGPT / Gemini / Google AI Mode for a query; or web rank via bing_serp / brave_serp |
 | `am_i_cited` | Presence + rank for a domain across a query cluster |
 | `ai_overview` | Google AI Overview presence + cited sources |
 | `cited_for` | Queries the domain has been cited for, from local cache |
@@ -81,6 +81,35 @@ Cache views the client can read or subscribe to (no tool call required):
 - `citation://docs/llms-txt` - llms.txt primer (markdown)
 - `citation://docs/ai-crawlers` - AI crawlers cheatsheet (markdown)
 - `citation://domain/{domain}/cited-for` - dynamic template: citations for `{domain}`
+
+## What this actually measures
+
+Every response includes a `surface` field that tells you exactly how the data was collected. Understanding this is important before drawing conclusions.
+
+| Surface | Engines | What it means |
+|---|---|---|
+| `consumer_scrape` | `perplexity`, `google_ai_mode` | Proxied through a real consumer-facing AI search product. Closest to what your users see. |
+| `api_proxy` | `claude`, `openai`, `gemini` | API call to a search-enabled LLM. **May differ from consumer product behavior** — different model versions, no UI-level ranking logic, no personalization. Use as a directional proxy, not as ground truth. |
+| `web_rank` | `bing_serp`, `brave_serp` | Traditional web search rank (not LLM citation). Measures whether a URL appears in SERP results, not whether an LLM cites it. |
+| `static_signal` | `predict_citation`, `wikipedia_mentions` | Offline signal computed from public data. No live LLM query. |
+
+### Per-engine notes
+
+**`perplexity` (consumer_scrape)** — Sonar Pro via the Perplexity API with a consumer-equivalent system prompt. Reasonably close to Perplexity.ai. Citations come from `search_results` in the response; the `citations` fallback contains URL-only entries without title.
+
+**`claude` (api_proxy)** — Claude Sonnet via the Anthropic Messages API with `web_search` tool enabled. The consumer Claude.ai product uses different routing and ranking logic. Citation behavior can differ, especially for recent/time-sensitive queries.
+
+**`openai` (api_proxy)** — `gpt-4o-search-preview` via the OpenAI Responses API. This is the model OpenAI ships to mirror SearchGPT behavior — closer to consumer than `gpt-4o-mini`, but still API-tier.
+
+**`gemini` (api_proxy)** — Gemini 2.5 Pro via the Generative Language API with `google_search` grounding. Consumer Gemini uses the same grounding index but different re-ranking. Results are directional.
+
+**`google_ai_mode` (consumer_scrape)** — Google AI Mode results via SerpAPI. Closest to what users see in Google Search. Requires `SERPAPI_KEY`.
+
+**`bing_serp` / `brave_serp` (web_rank)** — Traditional SERP rank. Does NOT measure LLM citations. Use `check_citations` with these engines to compare organic web rank against LLM citation rank. `am_i_cited` refuses these engines — it only measures LLM behavior.
+
+The proxy nature of `api_proxy` engines is a feature, not a bug: it lets you run citation checks without consuming expensive consumer-product quota. Just don't report API-proxy numbers as "ChatGPT cites you" without the caveat.
+
+---
 
 ## Quick start
 
@@ -133,12 +162,13 @@ Set only the keys you have. Any MCP client that supports stdio transport works -
 
 | Var | Purpose | Free tier? |
 |---|---|---|
-| `PERPLEXITY_API_KEY` | check_citations (Perplexity) | Yes |
-| `SERPAPI_KEY` | ai_overview | 100/month free |
-| `BING_API_KEY` | check_citations (Bing) | Yes |
-| `ANTHROPIC_API_KEY` | check_citations (Claude) | Paid only |
-| `OPENAI_API_KEY` | check_citations (ChatGPT) | Paid only |
-| `GEMINI_API_KEY` | check_citations (Gemini) | Yes |
+| `PERPLEXITY_API_KEY` | check_citations (perplexity — consumer_scrape) | Yes |
+| `SERPAPI_KEY` | ai_overview + check_citations (google_ai_mode — consumer_scrape) | 100/month free |
+| `ANTHROPIC_API_KEY` | check_citations (claude — api_proxy) | Paid only |
+| `OPENAI_API_KEY` | check_citations (openai — api_proxy) | Paid only |
+| `GEMINI_API_KEY` | check_citations (gemini — api_proxy) | Yes |
+| `BING_API_KEY` | check_citations (bing_serp — web_rank) | Yes |
+| `BRAVE_API_KEY` | check_citations (brave_serp — web_rank) | Yes (2000/month) |
 | `CITATION_CACHE_TTL_DAYS` | Cache TTL for citation_check entries (default 7) | n/a |
 | `CITATION_AI_OVERVIEW_TTL_DAYS` | Cache TTL for ai_overview entries (default 1) | n/a |
 | `CITATION_CONFIG_DIR` | Override config dir (default `~/.config/citation-intelligence`) | n/a |

@@ -26,7 +26,7 @@ export const gscCitationGapInputSchema = {
     .string()
     .describe("ISO date for GSC range end, e.g. '2026-05-01'."),
   engine: z
-    .enum(["perplexity", "claude", "openai", "gemini", "bing", "brave", "auto"])
+    .enum(["perplexity", "claude", "openai", "gemini", "bing_serp", "brave_serp", "google_ai_mode", "auto"])
     .default("auto")
     .describe("AI engine for the citation check."),
   credentials_path: z

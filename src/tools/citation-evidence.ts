@@ -8,10 +8,10 @@ export const citationEvidenceInputSchema = {
     .min(1)
     .describe("Search query whose AI answer to extract citation evidence from."),
   engine: z
-    .enum(["perplexity", "claude", "openai", "gemini", "bing", "brave", "auto"])
+    .enum(["perplexity", "claude", "openai", "gemini", "bing_serp", "brave_serp", "google_ai_mode", "auto"])
     .default("auto")
     .describe(
-      "AI engine to query. Engines without raw_answer (Bing, Brave) return no evidence.",
+      "AI engine to query. web_rank engines (bing_serp, brave_serp) lack raw_answer and return no evidence.",
     ),
   max_results: z
     .number()

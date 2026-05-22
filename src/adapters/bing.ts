@@ -16,7 +16,7 @@ export async function bingSearch(
   if (!key) {
     throw new ToolFetchError({
       type: "missing_key",
-      engine: "bing",
+      engine: "bing_serp",
       env_var: "BING_API_KEY",
       message:
         "Set BING_API_KEY to use the Bing engine. Free tier at https://www.microsoft.com/en-us/bing/apis/bing-web-search-api.",

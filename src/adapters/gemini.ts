@@ -26,12 +26,16 @@ export async function geminiSearch(
     });
   }
 
+  // System prompt approximates Gemini consumer app behavior: search-first with source attribution.
   const body = JSON.stringify({
+    system_instruction: {
+      parts: [{ text: "You are a search assistant. Answer with inline citations. List each source URL you used." }],
+    },
     contents: [{ parts: [{ text: query }] }],
     tools: [{ google_search: {} }],
   });
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${encodeURIComponent(key)}`;
 
   const res = await fetchJson<GeminiResponse>(url, {
     method: "POST",

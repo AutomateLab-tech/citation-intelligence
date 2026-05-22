@@ -8,7 +8,7 @@ export const citedForInputSchema = {
     .optional()
     .describe("ISO date floor, e.g. '2026-01-01'. Only return entries fetched on or after this date."),
   engine: z
-    .enum(["perplexity", "claude", "openai", "gemini", "bing"])
+    .enum(["perplexity", "claude", "openai", "gemini", "bing_serp", "brave_serp", "google_ai_mode"])
     .optional()
     .describe("Filter by engine. Omit to include all."),
   limit: z.number().int().min(1).max(500).default(50).describe("Maximum results."),

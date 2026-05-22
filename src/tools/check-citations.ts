@@ -9,7 +9,8 @@ import { googleAiModeSearch } from "../adapters/google-ai-mode.js";
 import { envKey } from "../lib/config.js";
 import { getCitations, putCitations } from "../lib/cache.js";
 import { ToolFetchError } from "../lib/fetch.js";
-import type { AdapterResult, Engine } from "../types.js";
+import type { AdapterResult, Engine, Surface } from "../types.js";
+import { ENGINE_SURFACE } from "../types.js";
 
 export const checkCitationsInputSchema = {
   query: z.string().min(1).describe("The search query to test (what would a user ask an AI?)"),
@@ -19,13 +20,19 @@ export const checkCitationsInputSchema = {
       "claude",
       "openai",
       "gemini",
-      "bing",
-      "brave",
+      "bing_serp",
+      "brave_serp",
       "google_ai_mode",
       "auto",
     ])
     .default("auto")
-    .describe("AI engine to query. 'auto' picks the first available based on configured API keys."),
+    .describe(
+      "Engine to query.\n" +
+      "• perplexity / google_ai_mode — consumer_scrape: closest to real product behavior.\n" +
+      "• claude / openai / gemini — api_proxy: API-tier call, may differ from consumer product.\n" +
+      "• bing_serp / brave_serp — web_rank: traditional SERP rank, NOT LLM citation.\n" +
+      "'auto' prefers SerpAPI (google_ai_mode) → Perplexity → LLM adapters → web_rank."
+    ),
   max_results: z
     .number()
     .int()
@@ -33,18 +40,23 @@ export const checkCitationsInputSchema = {
     .max(50)
     .default(10)
     .describe("Maximum citations to return."),
+  perplexity_model: z
+    .string()
+    .optional()
+    .describe("Perplexity model override (e.g. 'sonar', 'sonar-pro', 'sonar-reasoning'). Only used when engine='perplexity'. Defaults to 'sonar-pro'."),
 };
 
 const inputSchema = z.object(checkCitationsInputSchema);
 
+/** auto-pick prefers consumer_scrape surfaces first, then api_proxy, then web_rank */
 function pickAutoEngine(): Engine | null {
+  if (envKey("SERPAPI_KEY")) return "google_ai_mode";
   if (envKey("PERPLEXITY_API_KEY")) return "perplexity";
   if (envKey("ANTHROPIC_API_KEY")) return "claude";
   if (envKey("OPENAI_API_KEY")) return "openai";
   if (envKey("GEMINI_API_KEY")) return "gemini";
-  if (envKey("BRAVE_API_KEY")) return "brave";
-  if (envKey("BING_API_KEY")) return "bing";
-  if (envKey("SERPAPI_KEY")) return "google_ai_mode";
+  if (envKey("BRAVE_API_KEY")) return "brave_serp";
+  if (envKey("BING_API_KEY")) return "bing_serp";
   return null;
 }
 
@@ -52,19 +64,20 @@ async function runEngine(
   engine: Engine,
   query: string,
   maxResults: number,
+  perplexityModel?: string,
 ): Promise<AdapterResult> {
   switch (engine) {
     case "perplexity":
-      return perplexitySearch(query, maxResults);
+      return perplexitySearch(query, maxResults, perplexityModel);
     case "claude":
       return claudeSearch(query, maxResults);
     case "openai":
       return openaiSearch(query, maxResults);
     case "gemini":
       return geminiSearch(query, maxResults);
-    case "bing":
+    case "bing_serp":
       return bingSearch(query, maxResults);
-    case "brave":
+    case "brave_serp":
       return braveSearch(query, maxResults);
     case "google_ai_mode":
       return googleAiModeSearch(query, maxResults);
@@ -92,11 +105,14 @@ export async function checkCitations(input: z.infer<typeof inputSchema>) {
     engine = requested;
   }
 
+  const surface: Surface = ENGINE_SURFACE[engine as Exclude<Engine, "auto">];
+
   const cached = await getCitations(parsed.query, engine);
   if (cached) {
     return {
       query: parsed.query,
       engine,
+      surface,
       fetched_at: cached.fetched_at,
       citations: cached.citations.slice(0, parsed.max_results),
       raw_answer: cached.raw_answer,
@@ -104,7 +120,7 @@ export async function checkCitations(input: z.infer<typeof inputSchema>) {
     };
   }
 
-  const result = await runEngine(engine, parsed.query, parsed.max_results);
+  const result = await runEngine(engine, parsed.query, parsed.max_results, parsed.perplexity_model);
   const fetched_at = new Date().toISOString();
 
   await putCitations({
@@ -119,6 +135,7 @@ export async function checkCitations(input: z.infer<typeof inputSchema>) {
   return {
     query: parsed.query,
     engine,
+    surface,
     fetched_at,
     citations: result.citations,
     raw_answer: result.raw_answer,

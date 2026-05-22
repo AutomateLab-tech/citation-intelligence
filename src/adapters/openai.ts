@@ -3,7 +3,7 @@ import { fetchJson, ToolFetchError } from "../lib/fetch.js";
 import { log } from "../lib/log.js";
 import type { AdapterResult, Citation } from "../types.js";
 
-const OPENAI_MODEL = "gpt-4o-mini";
+const OPENAI_MODEL = "gpt-4o-search-preview";
 
 type OpenAiResponsesResult = {
   output?: Array<{
@@ -36,9 +36,11 @@ export async function openaiSearch(
   }
 
   log.debug("openai web_search", { model: OPENAI_MODEL });
+  // System prompt approximates ChatGPT consumer behavior: answer with inline citations.
   const body = JSON.stringify({
     model: OPENAI_MODEL,
     tools: [{ type: "web_search_preview" }],
+    system: "You are a search assistant. Answer with inline citations. List each source URL you used.",
     input: query,
   });
 

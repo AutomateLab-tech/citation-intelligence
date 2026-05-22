@@ -10,11 +10,11 @@ export const canonicalCompetitorSetInputSchema = {
     .min(1)
     .describe("Search query to fan out across engines."),
   engines: z
-    .array(z.enum(["perplexity", "claude", "openai", "gemini", "bing", "brave"]))
+    .array(z.enum(["perplexity", "claude", "openai", "gemini", "google_ai_mode", "bing_serp", "brave_serp"]))
     .min(1)
-    .max(6)
+    .max(7)
     .optional()
-    .describe("Engines to query. If omitted, uses all engines with a configured API key."),
+    .describe("Engines to query. If omitted, uses all LLM engines with a configured API key (google_ai_mode, perplexity, claude, openai, gemini). Include bing_serp/brave_serp only for web_rank comparison."),
   top_n: z
     .number()
     .int()
@@ -89,12 +89,12 @@ function hostOf(url: string): string | null {
 
 function availableEngines(): Engine[] {
   const list: Engine[] = [];
+  if (envKey("SERPAPI_KEY")) list.push("google_ai_mode");
   if (envKey("PERPLEXITY_API_KEY")) list.push("perplexity");
   if (envKey("ANTHROPIC_API_KEY")) list.push("claude");
   if (envKey("OPENAI_API_KEY")) list.push("openai");
   if (envKey("GEMINI_API_KEY")) list.push("gemini");
-  if (envKey("BRAVE_API_KEY")) list.push("brave");
-  if (envKey("BING_API_KEY")) list.push("bing");
+  // bing_serp/brave_serp not included by default — they measure web rank, not LLM citations
   return list;
 }
 

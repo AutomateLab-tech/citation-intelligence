@@ -3,10 +3,27 @@ export type Engine =
   | "claude"
   | "openai"
   | "gemini"
-  | "bing"
-  | "brave"
+  | "bing_serp"
+  | "brave_serp"
   | "google_ai_mode"
   | "auto";
+
+/** How the data was collected — lets callers understand what the result actually measures. */
+export type Surface =
+  | "consumer_scrape" // proxied through a real consumer-facing LLM search product
+  | "api_proxy"       // API call to a search-enabled LLM (may differ from consumer product)
+  | "web_rank"        // traditional web search ranking (not LLM citation)
+  | "static_signal";  // static / offline signal (embeddings, Wikipedia, etc.)
+
+export const ENGINE_SURFACE: Record<Exclude<Engine, "auto">, Surface> = {
+  perplexity: "consumer_scrape",
+  claude: "api_proxy",
+  openai: "api_proxy",
+  gemini: "api_proxy",
+  google_ai_mode: "consumer_scrape",
+  bing_serp: "web_rank",
+  brave_serp: "web_rank",
+};
 
 export type Citation = {
   url: string;
@@ -18,6 +35,7 @@ export type Citation = {
 export type NormalizedCitationResult = {
   query: string;
   engine: Engine;
+  surface: Surface;
   fetched_at: string;
   citations: Citation[];
   raw_answer?: string;

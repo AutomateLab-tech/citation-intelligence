@@ -34,6 +34,7 @@ import { citationEvidence, citationEvidenceInputSchema } from "./tools/citation-
 import { crawlerAccessAudit, crawlerAccessAuditInputSchema } from "./tools/crawler-access-audit.js";
 import { sitemapCitationMap, sitemapCitationMapInputSchema } from "./tools/sitemap-citation-map.js";
 import { canonicalCompetitorSet, canonicalCompetitorSetInputSchema } from "./tools/canonical-competitor-set.js";
+import { structuredDataRepair, structuredDataRepairInputSchema } from "./tools/structured-data-repair.js";
 import { registerPrompts } from "./prompts.js";
 import { registerResources } from "./resources.js";
 import { ToolFetchError } from "./lib/fetch.js";
@@ -42,7 +43,7 @@ import type { ToolError } from "./types.js";
 
 const server = new McpServer({
   name: "@automatelab/citation-intelligence",
-  version: "0.6.0",
+  version: "0.7.0",
 });
 
 type ToolResponse = {
@@ -305,6 +306,16 @@ server.registerTool(
   (args) => wrapHandler(() => canonicalCompetitorSet(args)),
 );
 
+server.registerTool(
+  "structured_data_repair",
+  {
+    description:
+      "Suggest missing JSON-LD additions for a URL. Fetches the page, detects existing schema types, and returns ready-to-paste templates for types that are missing but signalled by page content (BlogPosting from og:type=article or bylines, FAQPage from Q&A pairs, HowTo from numbered steps, BreadcrumbList from nested paths, Organization on homepages). Templates are pre-filled from page metadata where possible; fields marked FILL: require manual completion.",
+    inputSchema: structuredDataRepairInputSchema,
+  },
+  (args) => wrapHandler(() => structuredDataRepair(args)),
+);
+
 registerPrompts(server);
 registerResources(server);
 
@@ -313,7 +324,7 @@ await server.connect(transport);
 log.info(
   "server ready on stdio",
   {
-    version: "0.6.0",
+    version: "0.7.0",
     log_level: log.level(),
     tools: [
       "check_citations",
@@ -339,6 +350,7 @@ log.info(
       "crawler_access_audit",
       "sitemap_citation_map",
       "canonical_competitor_set",
+      "structured_data_repair",
     ],
     prompts: [
       "audit_citation_readiness",

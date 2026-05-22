@@ -6,7 +6,7 @@ import { log } from "../lib/log.js";
 export const citationFreshnessScoreInputSchema = {
   query: z.string().min(1).describe("Search query whose cited URLs to score for freshness."),
   engine: z
-    .enum(["perplexity", "claude", "openai", "gemini", "bing", "brave", "auto"])
+    .enum(["perplexity", "claude", "openai", "gemini", "bing_serp", "brave_serp", "google_ai_mode", "auto"])
     .default("auto")
     .describe("AI engine to query for the citation set."),
   max_results: z

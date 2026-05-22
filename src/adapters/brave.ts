@@ -20,7 +20,7 @@ export async function braveSearch(
   if (!key) {
     throw new ToolFetchError({
       type: "missing_key",
-      engine: "brave",
+      engine: "brave_serp",
       env_var: "BRAVE_API_KEY",
       message:
         "Set BRAVE_API_KEY to use the Brave engine. Free tier at https://api.search.brave.com (2000 queries/month).",

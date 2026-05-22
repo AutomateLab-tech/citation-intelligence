@@ -12,7 +12,7 @@ export const citedForDiffInputSchema = {
     .optional()
     .describe("ISO date floor for the 'current' window. Defaults to baseline_until."),
   engine: z
-    .enum(["perplexity", "claude", "openai", "gemini", "bing"])
+    .enum(["perplexity", "claude", "openai", "gemini", "bing_serp", "brave_serp", "google_ai_mode"])
     .optional()
     .describe("Filter by engine. Omit to include all."),
 };
