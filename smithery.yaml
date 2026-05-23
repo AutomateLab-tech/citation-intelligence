@@ -1,0 +1,50 @@
+startCommand:
+  type: stdio
+
+configSchema:
+  type: object
+  properties:
+    serpApiKey:
+      type: string
+      title: SerpAPI key
+      description: Enables Google AI Mode / AI Overviews citation data. Get one at serpapi.com.
+    perplexityApiKey:
+      type: string
+      title: Perplexity API key
+      description: Enables Perplexity citation data. Get one at perplexity.ai.
+    anthropicApiKey:
+      type: string
+      title: Anthropic API key
+      description: Enables Claude citation data.
+    openaiApiKey:
+      type: string
+      title: OpenAI API key
+      description: Enables ChatGPT citation data.
+    geminiApiKey:
+      type: string
+      title: Gemini API key
+      description: Enables Google Gemini citation data.
+    bingApiKey:
+      type: string
+      title: Bing Search API key
+      description: Enables Bing/Copilot citation data.
+    braveApiKey:
+      type: string
+      title: Brave Search API key
+      description: Enables Brave Search citation data.
+  required: []
+
+commandFunction: |-
+  config => ({
+    command: "npx",
+    args: ["-y", "@automatelab/citation-intelligence"],
+    env: {
+      ...(config.serpApiKey ? { SERPAPI_KEY: config.serpApiKey } : {}),
+      ...(config.perplexityApiKey ? { PERPLEXITY_API_KEY: config.perplexityApiKey } : {}),
+      ...(config.anthropicApiKey ? { ANTHROPIC_API_KEY: config.anthropicApiKey } : {}),
+      ...(config.openaiApiKey ? { OPENAI_API_KEY: config.openaiApiKey } : {}),
+      ...(config.geminiApiKey ? { GEMINI_API_KEY: config.geminiApiKey } : {}),
+      ...(config.bingApiKey ? { BING_API_KEY: config.bingApiKey } : {}),
+      ...(config.braveApiKey ? { BRAVE_API_KEY: config.braveApiKey } : {}),
+    }
+  })
