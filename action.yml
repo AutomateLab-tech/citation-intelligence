@@ -1,0 +1,57 @@
+name: 'Citation Intelligence'
+description: 'Audit AI citation visibility for your domain across Perplexity, Claude, ChatGPT, Gemini, and Google AI Overviews. BYO API keys, no telemetry.'
+author: 'AutomateLab'
+
+branding:
+  icon: 'search'
+  color: 'blue'
+
+inputs:
+  domain:
+    description: 'Domain to audit (e.g. example.com — no protocol, no trailing slash).'
+    required: true
+  queries:
+    description: 'One query per line. Each is tested independently. Max 20.'
+    required: true
+  engine:
+    description: >
+      Engine to query: auto | perplexity | claude | openai | gemini |
+      google_ai_mode | bing_serp | brave_serp.
+      "auto" checks all engines for which an API key is supplied and returns
+      a cross-engine consensus score.
+    required: false
+    default: 'auto'
+  perplexity_api_key:
+    description: 'Perplexity API key (enables perplexity engine).'
+    required: false
+  anthropic_api_key:
+    description: 'Anthropic API key (enables claude engine).'
+    required: false
+  openai_api_key:
+    description: 'OpenAI API key (enables openai engine).'
+    required: false
+  gemini_api_key:
+    description: 'Google Gemini API key (enables gemini engine).'
+    required: false
+  serpapi_key:
+    description: 'SerpAPI key (enables google_ai_mode and bing_serp engines).'
+    required: false
+  fail_if_not_cited:
+    description: 'Exit with code 1 when the domain is not cited in any response.'
+    required: false
+    default: 'false'
+
+outputs:
+  cited:
+    description: '"true" if the domain appears in at least one AI citation.'
+  citation_rate:
+    description: 'Fraction of queries where the domain was cited (0.0-1.0).'
+  result:
+    description: 'Full JSON result from the citation check.'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  entrypoint: 'node'
+  args:
+    - '/app/action/runner.mjs'
