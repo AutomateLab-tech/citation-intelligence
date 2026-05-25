@@ -2,8 +2,21 @@
 // Citation Intelligence MCP - entrypoint.
 // All logging goes to stderr. stdout is reserved for JSON-RPC transport.
 
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+// Read version from package.json at runtime so the handshake string and
+// the npm-published version never drift. dist/index.js sits at <pkg>/dist/.
+const SERVER_VERSION: string = JSON.parse(
+  readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "..", "package.json"),
+    "utf8",
+  ),
+).version;
 
 import {
   checkCitations,
@@ -69,7 +82,7 @@ import {
 
 const server = new McpServer({
   name: "@automatelab/citation-intelligence",
-  version: "0.7.0",
+  version: SERVER_VERSION,
 });
 
 type ToolResponse = {
@@ -542,7 +555,7 @@ await server.connect(transport);
 log.info(
   "server ready on stdio",
   {
-    version: "0.7.0",
+    version: SERVER_VERSION,
     log_level: log.level(),
     tools: [
       "check_citations",
