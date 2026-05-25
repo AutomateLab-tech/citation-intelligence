@@ -36,44 +36,73 @@ The AI citation tracking market is dominated by VC-funded dashboards starting at
 
 ## Tools
 
-**Start with `citation_provenance` or `am_i_cited`.** Single-engine results (`check_citations` with a pinned engine) are directional; multi-engine consensus is the honest signal. A URL cited by 4 of 5 engines is a very different finding than one cited by 1.
+Tools are grouped into six namespaces: `citations.*`, `domain.*`, `signals.*`, `panel.*`, `competitors.*`, `audit.*`. Names form a navigable tree — pick a namespace by the question you're asking.
+
+**Start with `citations.provenance` or `domain.am_i_cited`.** Single-engine results (`citations.check` with a pinned engine) are directional; multi-engine consensus is the honest signal. A URL cited by 4 of 5 engines is a very different finding than one cited by 1.
+
+### `citations.*` — query-level: who cites what, with what evidence
 
 | Tool | Purpose |
 |---|---|
-| `citation_provenance` | **Recommended first tool.** Fan a query across engines; per-URL cross-engine consensus matrix. Returns `interpretation_note` per engine. |
-| `am_i_cited` | Domain citation check. With `engine=auto` (default): fans across all available LLM engines, returns per-engine breakdown + cross-engine consensus. Pin `engine=` to reduce cost. |
-| `check_citations` | URLs cited by Perplexity / Claude / ChatGPT / Gemini / Google AI Mode for a query; or web rank via bing_serp / brave_serp |
-| `ai_overview` | Google AI Overview presence + cited sources |
-| `cited_for` | Queries the domain has been cited for, from local cache |
-| `predict_citation` | Citation likelihood from public signals - no LLM fired |
-| `track_queries` | Save / load / list named query panels (editorial watchlists) |
-| `run_panel` | Run a panel through `am_i_cited` and snapshot to disk |
-| `citation_trend` | Time-series report of citation rate + per-query gained/lost deltas |
-| `compare_domains` | Side-by-side `predict_citation` across 2-10 URLs |
-| `wikipedia_mentions` | List Wikipedia articles referencing a domain (zero keys) |
-| `audit_sitemap` | Bulk `predict_citation` across every URL in a sitemap, worst-first |
-| `gsc_citation_gap` | Join Google Search Console performance with AI citation status |
-| `compete_for_query` | End-to-end competitive snapshot: your URL vs top cited competitors |
-| `citation_freshness_score` | Recency score (halflife=365d) for the pages an engine cites |
-| `cited_for_diff` | Diff of `cited_for` between two time windows for a domain |
-| `schema_audit` | Deep schema.org validation - required fields per `@type`, malformed JSON-LD |
-| `llms_txt_generator` | Generate an `llms.txt` (https://llmstxt.org) from a sitemap |
-| `answer_box_position` | Bin each citation's first mention in `raw_answer` into early/middle/late thirds |
-| `citation_provenance` | Fan a query across engines, report per-URL cross-engine consensus |
-| `citation_evidence` | Extract the cited snippet from `raw_answer` for each citation (why, not just that) |
-| `crawler_access_audit` | Verify GPTBot / ClaudeBot / PerplexityBot / CCBot / Google-Extended etc. can fetch a URL |
-| `sitemap_citation_map` | Cross-reference sitemap URLs with cached citations (inverse of audit_sitemap) |
-| `canonical_competitor_set` | Top cited domains per query, aggregated across engines |
+| `citations.provenance` | **Recommended first tool.** Fan a query across engines; per-URL cross-engine consensus matrix. Returns `interpretation_note` per engine. |
+| `citations.check` | URLs cited by Perplexity / Claude / ChatGPT / Gemini / Google AI Mode for a query; or web rank via bing_serp / brave_serp |
+| `citations.evidence` | Extract the cited snippet from `raw_answer` for each citation (why, not just that) |
+| `citations.predict` | Citation likelihood from public signals - no LLM fired |
+| `citations.trend` | Time-series report of citation rate + per-query gained/lost deltas |
+| `citations.freshness` | Recency score (halflife=365d) for the pages an engine cites |
+
+### `domain.*` — domain-level: am I cited, what for
+
+| Tool | Purpose |
+|---|---|
+| `domain.am_i_cited` | Domain citation check. With `engine=auto` (default): fans across all available LLM engines, returns per-engine breakdown + cross-engine consensus. Pin `engine=` to reduce cost. |
+| `domain.cited_for` | Queries the domain has been cited for, from local cache |
+| `domain.cited_for_diff` | Diff of `domain.cited_for` between two time windows for a domain |
+
+### `signals.*` — external signals: AI Overview, Wikipedia, GSC, answer-box position
+
+| Tool | Purpose |
+|---|---|
+| `signals.ai_overview` | Google AI Overview presence + cited sources |
+| `signals.wikipedia` | List Wikipedia articles referencing a domain (zero keys) |
+| `signals.gsc_gap` | Join Google Search Console performance with AI citation status |
+| `signals.answer_box` | Bin each citation's first mention in `raw_answer` into early/middle/late thirds |
+
+### `panel.*` — saved query panels (editorial watchlists)
+
+| Tool | Purpose |
+|---|---|
+| `panel.track` | Save / load / list named query panels (editorial watchlists) |
+| `panel.run` | Run a panel through `domain.am_i_cited` and snapshot to disk |
+
+### `competitors.*` — competitive landscape per query
+
+| Tool | Purpose |
+|---|---|
+| `competitors.canonical_set` | Top cited domains per query, aggregated across engines |
+| `competitors.compete` | End-to-end competitive snapshot: your URL vs top cited competitors |
+| `competitors.compare` | Side-by-side `citations.predict` across 2-10 URLs |
+
+### `audit.*` — fixable on-page / on-site checks
+
+| Tool | Purpose |
+|---|---|
+| `audit.schema` | Deep schema.org validation - required fields per `@type`, malformed JSON-LD |
+| `audit.structured_data` | Repair-oriented schema.org diagnostics + suggested patches |
+| `audit.crawler_access` | Verify GPTBot / ClaudeBot / PerplexityBot / CCBot / Google-Extended etc. can fetch a URL |
+| `audit.sitemap` | Bulk `citations.predict` across every URL in a sitemap, worst-first |
+| `audit.sitemap_map` | Cross-reference sitemap URLs with cached citations (inverse of `audit.sitemap`) |
+| `audit.llms_txt` | Generate an `llms.txt` (https://llmstxt.org) from a sitemap |
 
 ### Prompts
 
 Server-side prompt templates the client can offer end users (call via the MCP prompt list):
 
-- `audit_citation_readiness(url)` - chains `predict_citation` + `schema_audit`
-- `competitor_snapshot(query, your_url?)` - chains `canonical_competitor_set` + `compete_for_query`
-- `ai_crawler_checkup(url)` - runs `crawler_access_audit` and writes a remediation list
-- `citation_gap_analysis(domain, days?)` - drives `gsc_citation_gap` and suggests next moves
-- `sitemap_coverage_review(sitemap_url)` - runs `sitemap_citation_map` and recommends priorities
+- `audit.citation_readiness(url)` - chains `citations.predict` + `audit.schema`
+- `audit.competitor_snapshot(query, your_url?)` - chains `competitors.canonical_set` + `competitors.compete`
+- `audit.crawler_checkup(url)` - runs `audit.crawler_access` and writes a remediation list
+- `audit.gap_analysis(domain, days?)` - drives `signals.gsc_gap` and suggests next moves
+- `audit.sitemap_coverage(sitemap_url)` - runs `audit.sitemap_map` and recommends priorities
 
 ### Resources
 
@@ -94,7 +123,7 @@ Every response includes a `surface` field that tells you exactly how the data wa
 | `consumer_scrape` | `perplexity`, `google_ai_mode` | Proxied through a real consumer-facing AI search product. Closest to what your users see. |
 | `api_proxy` | `claude`, `openai`, `gemini` | API call to a search-enabled LLM. **May differ from consumer product behavior** — different model versions, no UI-level ranking logic, no personalization. Use as a directional proxy, not as ground truth. |
 | `web_rank` | `bing_serp`, `brave_serp` | Traditional web search rank (not LLM citation). Measures whether a URL appears in SERP results, not whether an LLM cites it. |
-| `static_signal` | `predict_citation`, `wikipedia_mentions` | Offline signal computed from public data. No live LLM query. |
+| `static_signal` | `citations.predict`, `signals.wikipedia` | Offline signal computed from public data. No live LLM query. |
 
 ### Per-engine notes
 
@@ -108,7 +137,7 @@ Every response includes a `surface` field that tells you exactly how the data wa
 
 **`google_ai_mode` (consumer_scrape)** — Google AI Mode results via SerpAPI. Closest to what users see in Google Search. Requires `SERPAPI_KEY`.
 
-**`bing_serp` / `brave_serp` (web_rank)** — Traditional SERP rank. Does NOT measure LLM citations. Use `check_citations` with these engines to compare organic web rank against LLM citation rank. `am_i_cited` refuses these engines — it only measures LLM behavior.
+**`bing_serp` / `brave_serp` (web_rank)** — Traditional SERP rank. Does NOT measure LLM citations. Use `citations.check` with these engines to compare organic web rank against LLM citation rank. `domain.am_i_cited` refuses these engines — it only measures LLM behavior.
 
 The proxy nature of `api_proxy` engines is a feature, not a bug: it lets you run citation checks without consuming expensive consumer-product quota. Just don't report API-proxy numbers as "ChatGPT cites you" without the caveat.
 
@@ -154,7 +183,7 @@ Set only the keys you have. Any MCP client that supports stdio transport works -
 - **Free tier first.** SerpAPI gives 100 free Google AI Overview lookups/month. Bing Web Search has a free tier. Perplexity offers free Sonar access on signup.
 - **Bring your own paid keys** if you want the premium engines (Claude, ChatGPT, Gemini). Keys pass through to the vendor and never touch any third party.
 - **Local cache** at `~/.config/citation-intelligence/cache.json`. Repeated queries hit cache, not API. Default TTL: 7 days.
-- **predict_citation runs with zero keys** - it scores citation likelihood from public signals (Wikipedia, schema.org, llms.txt, GitHub) without firing any LLM.
+- **`citations.predict` runs with zero keys** - it scores citation likelihood from public signals (Wikipedia, schema.org, llms.txt, GitHub) without firing any LLM.
 
 ## Privacy
 
@@ -167,15 +196,15 @@ Set only the keys you have. Any MCP client that supports stdio transport works -
 
 | Var | Purpose | Free tier? |
 |---|---|---|
-| `PERPLEXITY_API_KEY` | check_citations (perplexity — consumer_scrape) | Yes |
-| `SERPAPI_KEY` | ai_overview + check_citations (google_ai_mode — consumer_scrape) | 100/month free |
-| `ANTHROPIC_API_KEY` | check_citations (claude — api_proxy) | Paid only |
-| `OPENAI_API_KEY` | check_citations (openai — api_proxy) | Paid only |
-| `GEMINI_API_KEY` | check_citations (gemini — api_proxy) | Yes |
-| `BING_API_KEY` | check_citations (bing_serp — web_rank) | Yes |
-| `BRAVE_API_KEY` | check_citations (brave_serp — web_rank) | Yes (2000/month) |
-| `CITATION_CACHE_TTL_DAYS` | Cache TTL for citation_check entries (default 7) | n/a |
-| `CITATION_AI_OVERVIEW_TTL_DAYS` | Cache TTL for ai_overview entries (default 1) | n/a |
+| `PERPLEXITY_API_KEY` | `citations.check` (perplexity — consumer_scrape) | Yes |
+| `SERPAPI_KEY` | `signals.ai_overview` + `citations.check` (google_ai_mode — consumer_scrape) | 100/month free |
+| `ANTHROPIC_API_KEY` | `citations.check` (claude — api_proxy) | Paid only |
+| `OPENAI_API_KEY` | `citations.check` (openai — api_proxy) | Paid only |
+| `GEMINI_API_KEY` | `citations.check` (gemini — api_proxy) | Yes |
+| `BING_API_KEY` | `citations.check` (bing_serp — web_rank) | Yes |
+| `BRAVE_API_KEY` | `citations.check` (brave_serp — web_rank) | Yes (2000/month) |
+| `CITATION_CACHE_TTL_DAYS` | Cache TTL for `citations.check` entries (default 7) | n/a |
+| `CITATION_AI_OVERVIEW_TTL_DAYS` | Cache TTL for `signals.ai_overview` entries (default 1) | n/a |
 | `CITATION_CONFIG_DIR` | Override config dir (default `~/.config/citation-intelligence`) | n/a |
 
 ## Example: am I cited?
@@ -184,7 +213,7 @@ Set only the keys you have. Any MCP client that supports stdio transport works -
 You: For the queries "best AI citation tracker", "MCP for AI search", "self-hosted GEO tool",
      is automatelab.tech cited?
 
-(agent invokes am_i_cited)
+(agent invokes `domain.am_i_cited`)
 
 Result:
 {
@@ -209,7 +238,7 @@ Result:
 ```
 You: How likely is https://example.com/blog/post to be cited by AI?
 
-(agent invokes predict_citation)
+(agent invokes `citations.predict`)
 
 Result:
 {
@@ -249,7 +278,7 @@ The Wikipedia signal is measured (it correlates with citation) but no "go get a 
 
 ## Workflow recipes
 
-Concrete patterns that compose the 12 tools into something useful. Costs assume ChatGPT or Perplexity at ~$0.01-0.03/query.
+Concrete patterns that compose the 24 tools into something useful. Costs assume ChatGPT or Perplexity at ~$0.01-0.03/query.
 
 ### 1. Weekly citation tracker
 
@@ -257,17 +286,17 @@ The single highest-ROI pattern. Pick 20-30 queries from your editorial backlog, 
 
 ```
 # One-time setup
-track_queries name="editorial-watchlist" domain="example.com" action="save"
-              queries=["best widget tutorial", "how to set up X", ...]
+panel.track name="editorial-watchlist" domain="example.com" action="save"
+            queries=["best widget tutorial", "how to set up X", ...]
 
 # Weekly cron (5 min, ~$0.20-0.60 per run)
-run_panel name="editorial-watchlist"
+panel.run name="editorial-watchlist"
 
 # Anytime
-citation_trend panel="editorial-watchlist"
+citations.trend panel="editorial-watchlist"
 ```
 
-`citation_trend` returns per-query deltas: which queries flipped from `cited: false` to `cited: true` since the first snapshot. That's your real editorial-impact metric.
+`citations.trend` returns per-query deltas: which queries flipped from `cited: false` to `cited: true` since the first snapshot. That's your real editorial-impact metric.
 
 ### 2. Pre-publish gate
 
@@ -275,23 +304,23 @@ Before publishing a post, find out who owns the citation slot and whether the sl
 
 ```
 # 1. Is there an AI Overview to compete for?
-ai_overview query="<target query>"
+signals.ai_overview query="<target query>"
 
 # 2. Who is cited today?
-check_citations query="<target query>"
+citations.check query="<target query>"
 
 # 3. After publish + 14 days: did the post break in?
-am_i_cited domain="example.com" queries=["<target query>"]
+domain.am_i_cited domain="example.com" queries=["<target query>"]
 ```
 
-If `check_citations` returns 5+ strong incumbents on a low-volume query, pick a different angle. If `ai_overview_present: false`, the query has no AI surface - reconsider.
+If `citations.check` returns 5+ strong incumbents on a low-volume query, pick a different angle. If `ai_overview_present: false`, the query has no AI surface - reconsider.
 
 ### 3. Bulk site audit
 
 Catch site-wide structural issues across every page in one pass. Zero API spend.
 
 ```
-audit_sitemap sitemap_url="https://example.com/sitemap.xml" limit=200
+audit.sitemap sitemap_url="https://example.com/sitemap.xml" limit=200
 ```
 
 Returns `worst_first` sorted by citation-likelihood score. Surfaces missing schema, conflicting canonicals, missing `/llms.txt`, broken HTTPS.
@@ -302,10 +331,10 @@ You're not cited; they are. Why?
 
 ```
 # 1. Find the top-cited URLs for your target query
-check_citations query="<query>"
+citations.check query="<query>"
 
 # 2. Compare your URL to theirs signal-by-signal
-compare_domains urls=[
+competitors.compare urls=[
   "https://example.com/your-post",
   "https://competitor-1.com/their-post",
   "https://competitor-2.com/their-post"
@@ -319,7 +348,7 @@ compare_domains urls=[
 The closest editorial wins are queries where you already rank in Google's top 10 but are invisible to AI. Requires a GCP service account with `webmasters.readonly` scope.
 
 ```
-gsc_citation_gap
+signals.gsc_gap
   domain="example.com"
   queries=["...editorial watchlist..."]
   start_date="2026-04-01"
@@ -333,7 +362,7 @@ gsc_citation_gap
 Wikipedia is the top-correlation signal but the advice "get on Wikipedia" is useless. So instead: watch when it happens organically.
 
 ```
-wikipedia_mentions domain="example.com" limit=50
+signals.wikipedia domain="example.com" limit=50
 ```
 
 Returns Wikipedia article URLs that already link to the domain. Re-run quarterly; the diff is your "we got a Wikipedia citation" alert.

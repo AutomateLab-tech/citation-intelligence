@@ -1,7 +1,16 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.AutomateLab-tech/citation-intelligence",
-  "description": "Track what LLMs cite: AI citation data from Perplexity, Claude, ChatGPT, Gemini, and Bing.",
+  "title": "Citation Intelligence",
+  "description": "Check what Perplexity, Claude, ChatGPT, Gemini, Bing, and Google AI Overviews cite for any query. Self-hosted, BYO API key.",
+  "websiteUrl": "https://automatelab.tech/products/mcp/citation-intelligence/",
+  "icons": [
+    {
+      "src": "https://automatelab.tech/services/favicon.jpg",
+      "mimeType": "image/jpeg",
+      "sizes": ["389x389"]
+    }
+  ],
   "repository": {
     "url": "https://github.com/AutomateLab-tech/citation-intelligence",
     "source": "github"

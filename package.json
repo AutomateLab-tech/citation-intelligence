@@ -5,7 +5,7 @@
   "description": "What LLMs cite, for agents. MCP server: check what Perplexity, Claude, ChatGPT, Gemini, Bing, and Google AI Overviews cite for any query. Self-hosted, BYO API key.",
   "license": "MIT",
   "author": "automatelab.tech",
-  "homepage": "https://github.com/AutomateLab-tech/citation-intelligence",
+  "homepage": "https://automatelab.tech/products/mcp/citation-intelligence/",
   "repository": {
     "type": "git",
     "url": "https://github.com/AutomateLab-tech/citation-intelligence.git"
