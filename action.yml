@@ -1,5 +1,5 @@
 name: 'Citation Intelligence'
-description: 'Audit AI citation visibility for your domain across Perplexity, Claude, ChatGPT, Gemini, and Google AI Overviews. BYO API keys, no telemetry.'
+description: 'Audit AI citation visibility for your domain. Checks Perplexity, Claude, ChatGPT, Gemini, and Google AI Overviews. BYO keys.'
 author: 'AutomateLab'
 
 branding:
