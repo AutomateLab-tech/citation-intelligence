@@ -227,7 +227,7 @@ server.registerTool(
   "panel.run",
   {
     description:
-      "Run a saved panel through am_i_cited and append a timestamped snapshot. Snapshots live under <config>/snapshots/<panel>/<iso>.json. Feeds citation_trend.",
+      "Run a saved panel through am_i_cited and append a timestamped snapshot. Side effects: makes external API calls to the configured AI engine (costs API quota); writes one snapshot file to disk at <config>/snapshots/<panel>/<iso>.json. Requires at least one engine API key (same as am_i_cited). Returns per-query citation presence and a citation_rate summary for the run. Use panel.track to create a panel first; use citations.trend to read the accumulated trend after multiple runs.",
     inputSchema: runPanelInputSchema,
     outputSchema: runPanelOutputShape,
     annotations: {
@@ -245,7 +245,7 @@ server.registerTool(
   "citations.trend",
   {
     description:
-      "Report citation rate over time for a panel from stored snapshots. Returns the series of citation_rate per snapshot plus per-query deltas (gained/lost/unchanged) between first and last snapshot.",
+      "Report citation rate over time for a panel from stored snapshots. Read-only; cache-only — makes no API calls to any AI engine and costs no API quota. Reads snapshot files from <config>/snapshots/<panel>/. Returns: snapshots[] (one entry per panel.run invocation, each with timestamp and citation_rate), plus per-query deltas (gained/lost/unchanged) comparing first vs last snapshot. Returns an empty series when no snapshots exist yet. No auth required. No rate limits. Use panel.run to accumulate snapshots first; use since to restrict the time window.",
     inputSchema: citationTrendInputSchema,
     outputSchema: citationTrendOutputShape,
     annotations: {
@@ -281,7 +281,7 @@ server.registerTool(
   "signals.wikipedia",
   {
     description:
-      "List Wikipedia articles that reference the given domain. Wikipedia citation is the highest-lift signal for LLM training corpora. Zero keys required.",
+      "List Wikipedia articles that reference the given domain. Read-only. One HTTPS GET to the Wikipedia API (en.wikipedia.org/w/api.php?action=query&list=exturlusage). No auth required; no API keys; no rate limits beyond Wikipedia's public API fair-use policy (~1 request/second). Returns article titles and URLs. Wikipedia backlinks are the highest-lift signal for LLM training corpora — a domain cited from Wikipedia is far more likely to appear in AI training data and citation pools. Use lang to query non-English Wikipedias.",
     inputSchema: wikipediaMentionsInputSchema,
     outputSchema: wikipediaMentionsOutputShape,
     annotations: {
