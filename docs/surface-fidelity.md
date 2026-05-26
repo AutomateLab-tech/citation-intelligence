@@ -38,9 +38,9 @@ this table in one sentence. Read it before drawing conclusions.
 
 ### `openai` — `api_proxy` ★★★☆☆
 
-**`OPENAI_API_KEY`** — `gpt-4o-search-preview` via the Responses API with `web_search_preview` tool. This is the model OpenAI built to approximate SearchGPT behavior.
+**`OPENAI_API_KEY`** — `gpt-4o` via the Responses API with the `web_search_preview` tool. OpenAI retired the `gpt-4o-search-preview` alias; base `gpt-4o` + the tool is the supported path and produces equivalent grounding.
 
-**`interpretation_note`:** "gpt-4o-search-preview API. Real chatgpt.com users get gpt-4o + SearchGPT with different ranking and UI-level re-scoring."
+**`interpretation_note`:** "gpt-4o + web_search_preview tool via the Responses API. Real chatgpt.com users get gpt-4o + SearchGPT with different ranking and UI-level re-scoring."
 
 **When to use:** Reasonable proxy for ChatGPT web search citations. Better than `gpt-4o-mini` (the old default), worse than a direct ChatGPT product scrape.
 

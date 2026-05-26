@@ -131,7 +131,7 @@ Every response includes a `surface` field that tells you exactly how the data wa
 
 **`claude` (api_proxy)** — Claude Sonnet via the Anthropic Messages API with `web_search` tool enabled. The consumer Claude.ai product uses different routing and ranking logic. Citation behavior can differ, especially for recent/time-sensitive queries.
 
-**`openai` (api_proxy)** — `gpt-4o-search-preview` via the OpenAI Responses API. This is the model OpenAI ships to mirror SearchGPT behavior — closer to consumer than `gpt-4o-mini`, but still API-tier.
+**`openai` (api_proxy)** — `gpt-4o` + the `web_search_preview` tool via the OpenAI Responses API. Replaces the deprecated `gpt-4o-search-preview` alias OpenAI retired; base `gpt-4o` plus the tool is the supported path.
 
 **`gemini` (api_proxy)** — Gemini 2.5 Pro via the Generative Language API with `google_search` grounding. Consumer Gemini uses the same grounding index but different re-ranking. Results are directional.
 
