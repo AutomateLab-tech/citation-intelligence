@@ -5,6 +5,7 @@
 [![npm version](https://img.shields.io/npm/v/@automatelab/citation-intelligence.svg)](https://www.npmjs.com/package/@automatelab/citation-intelligence)
 [![license](https://img.shields.io/npm/l/@automatelab/citation-intelligence.svg)](./LICENSE)
 [![node](https://img.shields.io/node/v/@automatelab/citation-intelligence.svg)](https://nodejs.org)
+[![CI](https://github.com/AutomateLab-tech/citation-intelligence/actions/workflows/ci.yml/badge.svg)](https://github.com/AutomateLab-tech/citation-intelligence/actions/workflows/ci.yml)
 
 ## What this is
 
