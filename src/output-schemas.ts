@@ -43,7 +43,7 @@ export const checkCitationsOutputShape = {
   interpretation_note: z.string().describe("Guidance on how to interpret results from this engine."),
   fetched_at: z.string().describe("UTC ISO-8601 timestamp of the fetch."),
   citations: z.array(citationSchema).describe("Cited URLs ordered by rank."),
-  raw_answer: z.string().nullable().describe("Raw answer text from the engine, if available."),
+  raw_answer: z.string().nullable().optional().describe("Raw answer text from the engine, if available. Absent for web_rank engines (bing_serp, brave_serp) that return ranked URLs without a synthesized answer."),
   cached: z.boolean().describe("Whether the result was served from the local cache."),
 } as const;
 

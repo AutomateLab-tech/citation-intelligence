@@ -37,10 +37,11 @@ export async function openaiSearch(
 
   log.debug("openai web_search", { model: OPENAI_MODEL });
   // System prompt approximates ChatGPT consumer behavior: answer with inline citations.
+  // The Responses API takes the system prompt as `instructions`, not `system` (legacy Chat Completions param).
   const body = JSON.stringify({
     model: OPENAI_MODEL,
     tools: [{ type: "web_search_preview" }],
-    system: "You are a search assistant. Answer with inline citations. List each source URL you used.",
+    instructions: "You are a search assistant. Answer with inline citations. List each source URL you used.",
     input: query,
   });
 

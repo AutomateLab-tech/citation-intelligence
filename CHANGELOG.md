@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.2 - 2026-05-26
+
+Two adapter regressions blocking real queries:
+- OpenAI adapter sent `system` as a top-level Responses-API parameter; the API renamed it to `instructions`, so every call returned `400 Unknown parameter: 'system'`. Switched to `instructions`. Affects `check_citations` (engine=auto when only `OPENAI_API_KEY` is set, or engine=openai explicitly), `canonical_competitor_set`, and any downstream tool that fans through OpenAI.
+- `check_citations` output schema required `raw_answer: string | null`, but the `brave_serp` and `bing_serp` adapters (web_rank engines) legitimately omit `raw_answer` because SERP responses have no synthesized answer text. Calls succeeded upstream and citations landed in the local cache, but the tool returned `MCP error -32602: Invalid structured content ... raw_answer Required`. Schema is now `string | null | undefined`, with the description updated to call out that web_rank engines don't produce a raw answer.
+
 ## 0.6.0 - 2026-05-21
 
 Four new tools, a seventh engine, plus MCP prompts and resources surfaces.
