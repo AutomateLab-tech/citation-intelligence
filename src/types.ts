@@ -37,7 +37,7 @@ export const ENGINE_INTERPRETATION_NOTE: Record<Exclude<Engine, "auto">, string>
   perplexity:
     "sonar-pro API with a consumer-equivalent system prompt. Real perplexity.ai users may see sonar-reasoning-pro with multi-turn follow-ups.",
   openai:
-    "gpt-4o-search-preview API. Real chatgpt.com users get gpt-4o + SearchGPT with different ranking and UI-level re-scoring.",
+    "gpt-4o + web_search_preview tool via the Responses API. Real chatgpt.com users get gpt-4o + SearchGPT with different ranking and UI-level re-scoring.",
   claude:
     "claude-sonnet-4-7 API with web_search tool (max 5 uses). Real claude.ai users get a different model tier and citation UI.",
   gemini:
