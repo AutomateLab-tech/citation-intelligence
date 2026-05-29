@@ -33,6 +33,8 @@ import { citationEvidence } from "../src/tools/citation-evidence.js";
 import { crawlerAccessAudit } from "../src/tools/crawler-access-audit.js";
 import { sitemapCitationMap } from "../src/tools/sitemap-citation-map.js";
 import { canonicalCompetitorSet } from "../src/tools/canonical-competitor-set.js";
+import { summarizeBingQueryStats } from "../src/adapters/bing-webmaster.js";
+import { bingCitationGap } from "../src/tools/bing-citation-gap.js";
 import { ToolFetchError, _fetchDiagnostics } from "../src/lib/fetch.js";
 import { log } from "../src/lib/log.js";
 
@@ -481,5 +483,89 @@ describe("scoreSignals discriminates between thin and rich pages", () => {
     const thinScore = scoreSignals(thin).score;
     const richScore = scoreSignals(rich).score;
     expect(richScore - thinScore).toBeGreaterThanOrEqual(40);
+  });
+});
+
+describe("summarizeBingQueryStats", () => {
+  it("aggregates a weekly time series per query with impression-weighted position", () => {
+    // Two queries across two weekly dates. "mcp tools &amp; agents" exercises
+    // XML entity decoding. Weighted position = sum(pos*impr)/sum(impr).
+    const xml = `<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfQueryStats>
+  <QueryStats>
+    <AvgClickPosition>3</AvgClickPosition>
+    <AvgImpressionPosition>4</AvgImpressionPosition>
+    <Clicks>2</Clicks>
+    <Date>2026-05-15T00:00:00</Date>
+    <Impressions>100</Impressions>
+    <Query>mcp tools &amp; agents</Query>
+  </QueryStats>
+  <QueryStats>
+    <AvgClickPosition>5</AvgClickPosition>
+    <AvgImpressionPosition>6</AvgImpressionPosition>
+    <Clicks>3</Clicks>
+    <Date>2026-05-22T00:00:00</Date>
+    <Impressions>300</Impressions>
+    <Query>mcp tools &amp; agents</Query>
+  </QueryStats>
+  <QueryStats>
+    <AvgClickPosition>-1</AvgClickPosition>
+    <AvgImpressionPosition>2</AvgImpressionPosition>
+    <Clicks>0</Clicks>
+    <Date>2026-05-15T00:00:00</Date>
+    <Impressions>50</Impressions>
+    <Query>citation intelligence</Query>
+  </QueryStats>
+  <QueryStats>
+    <AvgClickPosition>-1</AvgClickPosition>
+    <AvgImpressionPosition>3</AvgImpressionPosition>
+    <Clicks>1</Clicks>
+    <Date>2026-05-22T00:00:00</Date>
+    <Impressions>50</Impressions>
+    <Query>citation intelligence</Query>
+  </QueryStats>
+</ArrayOfQueryStats>`;
+
+    const rows = summarizeBingQueryStats(xml);
+    expect(rows).toHaveLength(2);
+
+    // Sorted by impressions desc, so the &amp; query (400 impr) comes first.
+    const amp = rows[0];
+    expect(amp.query).toBe("mcp tools & agents");
+    expect(amp.impressions).toBe(400);
+    expect(amp.clicks).toBe(5);
+    // (4*100 + 6*300) / 400 = 2200/400 = 5.5
+    expect(amp.position).toBe(5.5);
+
+    const ci = rows[1];
+    expect(ci.query).toBe("citation intelligence");
+    expect(ci.impressions).toBe(100);
+    expect(ci.clicks).toBe(1);
+    // (2*50 + 3*50) / 100 = 250/100 = 2.5
+    expect(ci.position).toBe(2.5);
+  });
+
+  it("returns an empty array for an empty body", () => {
+    expect(summarizeBingQueryStats("<ArrayOfQueryStats/>")).toEqual([]);
+  });
+});
+
+describe("bing_citation_gap", () => {
+  it("rejects empty queries array", async () => {
+    await expect(
+      bingCitationGap({ domain: "example.com", queries: [], engine: "auto" }),
+    ).rejects.toBeDefined();
+  });
+
+  it("throws missing_key when BING_WEBMASTER_API_KEY is unset", async () => {
+    const saved = process.env["BING_WEBMASTER_API_KEY"];
+    delete process.env["BING_WEBMASTER_API_KEY"];
+    try {
+      await expect(
+        bingCitationGap({ domain: "example.com", queries: ["q"], engine: "auto" }),
+      ).rejects.toBeInstanceOf(ToolFetchError);
+    } finally {
+      if (saved !== undefined) process.env["BING_WEBMASTER_API_KEY"] = saved;
+    }
   });
 });

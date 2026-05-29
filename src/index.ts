@@ -36,6 +36,7 @@ import { compareDomains, compareDomainsInputSchema } from "./tools/compare-domai
 import { wikipediaMentions, wikipediaMentionsInputSchema } from "./tools/wikipedia-mentions.js";
 import { auditSitemap, auditSitemapInputSchema } from "./tools/audit-sitemap.js";
 import { gscCitationGap, gscCitationGapInputSchema } from "./tools/gsc-citation-gap.js";
+import { bingCitationGap, bingCitationGapInputSchema } from "./tools/bing-citation-gap.js";
 import { competeForQuery, competeForQueryInputSchema } from "./tools/compete-for-query.js";
 import { citationFreshnessScore, citationFreshnessScoreInputSchema } from "./tools/citation-freshness-score.js";
 import { citedForDiff, citedForDiffInputSchema } from "./tools/cited-for-diff.js";
@@ -69,6 +70,7 @@ import {
   citationFreshnessScoreOutputShape,
   citedForDiffOutputShape,
   gscCitationGapOutputShape,
+  bingCitationGapOutputShape,
   schemaAuditOutputShape,
   llmsTxtGeneratorOutputShape,
   answerBoxPositionOutputShape,
@@ -386,6 +388,24 @@ server.registerTool(
 );
 
 server.registerTool(
+  "signals.bing_gap",
+  {
+    description:
+      "Join Bing Webmaster Tools query stats with am_i_cited per query. Surfaces queries where the domain ranks well in Bing but is not cited in AI - the closest editorial wins. Bing's index backs Copilot/ChatGPT/Perplexity grounding, so a Bing rank gap is an LLM-citation gap. Requires BING_WEBMASTER_API_KEY (Bing Webmaster Tools -> Settings -> API Access).",
+    inputSchema: bingCitationGapInputSchema,
+    outputSchema: bingCitationGapOutputShape,
+    annotations: {
+      title: "Find Bing queries not cited by AI",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
+  },
+  (args) => wrapHandler(() => bingCitationGap(args)),
+);
+
+server.registerTool(
   "audit.schema",
   {
     description:
@@ -576,6 +596,7 @@ log.info(
       "signals.answer_box",
       "signals.wikipedia",
       "signals.gsc_gap",
+      "signals.bing_gap",
       "audit.sitemap",
       "audit.sitemap_map",
       "audit.crawler_access",

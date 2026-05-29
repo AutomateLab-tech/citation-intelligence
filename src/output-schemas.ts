@@ -326,6 +326,27 @@ export const gscCitationGapOutputShape = {
 } as const;
 
 // ---------------------------------------------------------------------------
+// bing_citation_gap
+// ---------------------------------------------------------------------------
+
+export const bingCitationGapOutputShape = {
+  domain: z.string().describe("Domain analyzed."),
+  site_url: z.string().describe("Bing Webmaster siteUrl used (https origin with trailing slash)."),
+  engine: z.string().optional().describe("Engine used for the citation check."),
+  rows: z.array(z.object({
+    query: z.string(),
+    bing: z.object({
+      impressions: z.number(),
+      clicks: z.number(),
+      position: z.number(),
+    }).nullable().describe("Bing Webmaster stats for this query, or null if the query is not in Bing's returned top-set."),
+    ai_cited: z.boolean().describe("Whether the domain was cited by the AI engine for this query."),
+    ai_rank: z.number().optional(),
+  })).describe("Per-query Bing rank + AI citation cross-reference."),
+  closest_wins: z.array(z.record(z.string(), z.unknown())).describe("Queries where domain ranks in Bing top-10 but is not AI-cited (the editorial gap)."),
+} as const;
+
+// ---------------------------------------------------------------------------
 // schema_audit
 // ---------------------------------------------------------------------------
 

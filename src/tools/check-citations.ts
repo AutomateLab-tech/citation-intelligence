@@ -57,7 +57,7 @@ function pickAutoEngine(): Engine | null {
   if (envKey("OPENAI_API_KEY")) return "openai";
   if (envKey("GEMINI_API_KEY")) return "gemini";
   if (envKey("BRAVE_API_KEY")) return "brave_serp";
-  if (envKey("BING_API_KEY")) return "bing_serp";
+  // bing_serp (Bing Web Search API) was retired 2025-08-11; never auto-select it.
   return null;
 }
 
@@ -99,7 +99,7 @@ export async function checkCitations(input: z.infer<typeof inputSchema>) {
       throw new ToolFetchError({
         type: "no_engine_available",
         message:
-          "No engine API key configured. Set one of: PERPLEXITY_API_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, BING_API_KEY.",
+          "No engine API key configured. Set one of: SERPAPI_KEY, PERPLEXITY_API_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, BRAVE_API_KEY.",
       });
     }
     engine = picked;
