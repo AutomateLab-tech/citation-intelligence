@@ -17,12 +17,12 @@
     "url": "https://github.com/AutomateLab-tech/citation-intelligence",
     "source": "github"
   },
-  "version": "0.9.3",
+  "version": "0.10.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@automatelab/citation-intelligence",
-      "version": "0.9.3",
+      "version": "0.10.0",
       "transport": {
         "type": "stdio"
       }
