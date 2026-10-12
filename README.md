@@ -402,3 +402,7 @@ Report a vulnerability via [SECURITY.md](./SECURITY.md).
 MIT - see [LICENSE](./LICENSE).
 
 Built by [automatelab.tech](https://automatelab.tech)
+
+## Maintenance and verification
+
+See [the maintenance guide](docs/maintenance-guide.md) for interpretation limits, current tool names where applicable, and reproducible verification.

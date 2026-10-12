@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { amICited } from "./am-i-cited.js";
 import { loadPanel, appendSnapshot } from "../lib/panels.js";
+import { ToolFetchError } from "../lib/fetch.js";
 
 export const runPanelInputSchema = {
   name: z
@@ -50,8 +51,12 @@ export async function runPanel(input: z.infer<typeof inputSchema>) {
       engineUsed = res.engine;
       perQuery.push(...(res.results as typeof perQuery));
     } else {
-      engineUsed = (res.engines?.[0]?.engine as typeof engineUsed) ?? parsed.engine;
-      for (const r of ((res.per_engine?.[0]?.results ?? []) as typeof perQuery)) perQuery.push(r);
+      const observed = res.per_engine?.find((run: { ok: boolean; results: unknown[] }) => run.ok && run.results.length === queries.length);
+      if (!observed) {
+        throw new ToolFetchError({ type: "no_engine_available", message: "No complete successful engine observation; panel snapshot was not saved." });
+      }
+      engineUsed = observed.engine;
+      for (const r of (observed.results as typeof perQuery)) perQuery.push(r);
     }
   }
 

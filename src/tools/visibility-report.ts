@@ -83,13 +83,10 @@ export async function visibilityReport(input: z.infer<typeof inputSchema>) {
   const sentimentCounts = { positive: 0, neutral: 0, negative: 0 };
 
   for (const query of queries) {
-    let res: Awaited<ReturnType<typeof checkCitations>>;
-    try {
-      res = await checkCitations({ query, engine: parsed.engine, max_results: parsed.max_results });
-    } catch {
-      per_query.push({ query, cited: false, rank: null, sentiment: null, sentiment_label: "n/a", top_competitor: null });
-      continue;
-    }
+    // An unavailable observation cannot be counted as a negative citation.
+    // Preserve the typed provider/config error through the MCP handler. Abort
+    // this incomplete report rather than publishing a misleading denominator.
+    const res = await checkCitations({ query, engine: parsed.engine, max_results: parsed.max_results });
     engineUsed = res.engine as typeof engineUsed;
 
     let cited = false;
