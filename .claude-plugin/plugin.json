@@ -1,5 +1,6 @@
 {
   "description": "Track which URLs Perplexity, Claude, ChatGPT, Gemini, Google AI Overviews, and Bing cite for any query. 12 tools across citations, domain, signals, competitors, panel, and audit namespaces. Self-hosted, BYO API keys.",
   "name": "citation-intelligence",
-  "displayName": "AutomateLab Citation Intelligence MCP"
+  "displayName": "AutomateLab Citation Intelligence MCP",
+  "version": "0.12.1"
 }
